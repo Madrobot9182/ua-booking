@@ -31,8 +31,7 @@ export default function RootLayout({
       >
         <NeonAuthUIProvider
           authClient={authClient}
-          redirectTo="/account/settings"
-          emailOTP
+          redirectTo="/account"
         >
           {children}
         </NeonAuthUIProvider>
