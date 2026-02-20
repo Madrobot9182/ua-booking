@@ -9,15 +9,57 @@ generator client {
   output   = "../app/generated/prisma"
 }
 
-// generator client {
-//   provider = "prisma-client-js"
-// }
-
 datasource db {
   provider = "postgresql"
 }
 
-model Test {
-  id   String @id @default(cuid())
-  name String
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  role      Role     @default(USER)
+  bookings  BookingRequest[]
+  createdAt DateTime @default(now())
+}
+
+model Room {
+  id            String   @id @default(cuid())
+  building      String
+  number        String
+  capacity      Int
+  description   String
+  bookings      BookingRequest[]
+}
+
+model BookingRequest {
+  id          String   @id @default(cuid())
+  roomId      String
+  room        Room     @relation(fields: [roomId], references: [id])
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  startTime   DateTime
+  endTime     DateTime
+  status      BookingStatus @default(PENDING)
+  description String?
+  messages    Message[]
+  createdAt   DateTime @default(now())
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  bookingId String
+  booking   BookingRequest @relation(fields: [bookingId], references: [id])
+  senderId  String
+  content   String
+  createdAt DateTime @default(now())
+}
+
+enum BookingStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum Role {
+  USER
+  ADMIN
 }
