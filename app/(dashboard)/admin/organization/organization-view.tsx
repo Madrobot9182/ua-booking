@@ -3,15 +3,25 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import RoomModal from "@/components/dashboard/room-model";
-import { Room } from "@/app/generated/prisma/browser";
-import { deleteRoomAction } from "@/lib/room-server-action";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Room, Organization } from "@/app/generated/prisma/browser";
+import { deleteRoomAction, getRooms } from "@/lib/room-server-action";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 
 interface OrganizationViewProps {
   initialRooms: Room[];
+  organizations: Organization[];
 }
 
-export default function OrganizationView({ initialRooms }: OrganizationViewProps) {
+export default function OrganizationView({
+  initialRooms,
+  organizations,
+}: OrganizationViewProps) {
   const [rooms, setRooms] = useState<Room[]>(initialRooms);
   const [buildingFilter, setBuildingFilter] = useState<string>("ALL");
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
@@ -25,8 +35,12 @@ export default function OrganizationView({ initialRooms }: OrganizationViewProps
       : rooms.filter(r => r.building === buildingFilter);
 
   const refreshRooms = async () => {
-    const updatedRooms = await fetch("/admin/organization?cache=reload").then(res => res.json());
-    setRooms(updatedRooms);
+    try {
+      const updatedRooms = await getRooms();
+      setRooms(updatedRooms);
+    } catch (err) {
+      console.error("Failed to refresh rooms:", err);
+    }
   };
 
   const handleDelete = async (roomId: string) => {
@@ -36,71 +50,69 @@ export default function OrganizationView({ initialRooms }: OrganizationViewProps
   };
 
   return (
-    <div className="min-h-screen p-6 space-y-6 bg-dark text-light">
-  {/* Header + Create Button */}
-  <div className="flex justify-between items-center">
-    <h1 className="text-2xl font-bold">Organization Management</h1>
-    <Button onClick={() => { setSelectedRoom(null); setShowModal(true); }}>+ Create Room</Button>
-  </div>
+    <div className="space-y-6">
+      {/* Header + Create Button */}
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Organization Management</h1>
+        <Button
+          onClick={() => {
+            setSelectedRoom(null);
+            setShowModal(true);
+          }}
+        >
+          + Create Room
+        </Button>
+      </div>
 
-  {/* Building Dropdown */}
-  <Select
-    value={buildingFilter}
-    onValueChange={setBuildingFilter}
-  >
-    <SelectTrigger className="w-60">
-      <SelectValue placeholder="Select Building" />
-    </SelectTrigger>
-    <SelectContent className="grid grid-cols-2 gap-2 p-2 max-h-64 overflow-y-auto">
-      {buildings.map(b => (
-        <SelectItem key={b} value={b}>{b}</SelectItem>
-      ))}
-    </SelectContent>
-  </Select>
-
-  {/* Timeline Table */}
-  <div className="overflow-x-auto mt-4">
-    <table className="min-w-full table-fixed border-collapse">
-      <thead>
-        <tr className="bg-muted text-sm">
-          <th className="p-2 border">Room</th>
-          {Array.from({ length: 24 }, (_, i) => (
-            <th key={i} className="p-2 border">{i}:00</th>
+      {/* Building Filter */}
+      <Select value={buildingFilter} onValueChange={setBuildingFilter}>
+        <SelectTrigger className="w-60">
+          <SelectValue placeholder="Select Building" />
+        </SelectTrigger>
+        <SelectContent className="max-h-64 overflow-y-auto">
+          {buildings.map(b => (
+            <SelectItem key={b} value={b}>
+              {b}
+            </SelectItem>
           ))}
-        </tr>
-      </thead>
-      <tbody>
-        {filteredRooms.map(room => {
-          const cells = Array.from({ length: 24 }, (_, hour) => {
-            const openHour = room.openTime.getHours();
-            const closeHour = room.closeTime.getHours();
-            const isOpen = hour >= openHour && hour < closeHour;
-            // const isBooked = room.?.some(
-            //   b => b.startTime.getHours() <= hour && b.endTime.getHours() > hour
-            // );
-            // const bg = !isOpen ? "bg-gray-700" : isBooked ? "bg-red-500/50" : "bg-green-500/20";
-            const bg = "bg-gray-700"
-            return <td key={hour} className={`border h-8 ${bg}`} />;
-          });
+        </SelectContent>
+      </Select>
 
-          return (
-            <tr key={room.id}>
-              <td className="border p-1 font-semibold">{room.number}</td>
-              {cells}
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
-  </div>
+      {/* Compact List */}
+      <div className="space-y-3">
+        {filteredRooms.map(room => (
+          <div
+            key={room.id}
+            className="flex justify-between items-center p-3 bg-card rounded-lg border hover:shadow cursor-pointer"
+            onClick={() => {
+              setSelectedRoom(room);
+              setShowModal(true);
+            }}
+          >
+            <div className="flex flex-col">
+              <span className="font-semibold">{room.building} {room.number}</span>
+              <span className="text-sm text-muted-foreground">
+                Capacity: {room.capacity} | Floor: {room.floor ?? "-"} | Open: {room.openTime.toISOString().slice(11,16)} - {room.closeTime.toISOString().slice(11,16)}
+              </span>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={e => { e.stopPropagation(); handleDelete(room.id); }}>
+                Delete
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
 
-  {showModal && (
-    <RoomModal
-      room={selectedRoom}
-      onClose={() => setShowModal(false)}
-      refreshRooms={refreshRooms}
-    />
-  )}
-</div>
+      {/* Modal */}
+      {showModal && (
+        <RoomModal
+          room={selectedRoom}
+          onClose={() => setShowModal(false)}
+          refreshRooms={refreshRooms}
+          organizations={organizations} // <-- pass all organizations here
+        />
+      )}
+    </div>
   );
 }
