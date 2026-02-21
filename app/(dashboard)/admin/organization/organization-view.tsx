@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import RoomModal from "@/components/dashboard/room-model";
 import { Room } from "@/app/generated/prisma/browser";
 import { deleteRoomAction } from "@/lib/room-server-action";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 interface OrganizationViewProps {
   initialRooms: Room[];
@@ -36,51 +37,70 @@ export default function OrganizationView({ initialRooms }: OrganizationViewProps
 
   return (
     <div className="min-h-screen p-6 space-y-6 bg-dark text-light">
-      {/* Header + Create Button */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Organization Management</h1>
-        <Button onClick={() => { setSelectedRoom(null); setShowModal(true); }}>+ Create Room</Button>
-      </div>
+  {/* Header + Create Button */}
+  <div className="flex justify-between items-center">
+    <h1 className="text-2xl font-bold">Organization Management</h1>
+    <Button onClick={() => { setSelectedRoom(null); setShowModal(true); }}>+ Create Room</Button>
+  </div>
 
-      {/* Building Filter */}
-      <div className="flex gap-3 flex-wrap">
-        {buildings.map(b => (
-          <Button
-            key={b}
-            variant={buildingFilter === b ? "default" : "outline"}
-            onClick={() => setBuildingFilter(b)}
-          >
-            {b}
-          </Button>
-        ))}
-      </div>
+  {/* Building Dropdown */}
+  <Select
+    value={buildingFilter}
+    onValueChange={setBuildingFilter}
+  >
+    <SelectTrigger className="w-60">
+      <SelectValue placeholder="Select Building" />
+    </SelectTrigger>
+    <SelectContent className="grid grid-cols-2 gap-2 p-2 max-h-64 overflow-y-auto">
+      {buildings.map(b => (
+        <SelectItem key={b} value={b}>{b}</SelectItem>
+      ))}
+    </SelectContent>
+  </Select>
 
-      {/* Room Grid */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredRooms.map(room => (
-          <div key={room.id} className="p-4 border rounded-xl bg-muted/20 hover:bg-muted/50 transition">
-            <h3 className="font-semibold">{room.number} </h3>
-            <p className="text-sm opacity-70">{room.building}</p>
-            <p className="text-sm">Capacity: {room.capacity}</p>
-            {room.description && <p className="text-sm mt-1">{room.description}</p>}
-            {/* {room.resources.length > 0 && <p className="text-sm mt-1">Resources: {room.resources.join(", ")}</p>} */}
-            {/* <p className="text-sm mt-1">{room.isActive ? "Active" : "Inactive"}</p> */}
+  {/* Timeline Table */}
+  <div className="overflow-x-auto mt-4">
+    <table className="min-w-full table-fixed border-collapse">
+      <thead>
+        <tr className="bg-muted text-sm">
+          <th className="p-2 border">Room</th>
+          {Array.from({ length: 24 }, (_, i) => (
+            <th key={i} className="p-2 border">{i}:00</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {filteredRooms.map(room => {
+          const cells = Array.from({ length: 24 }, (_, hour) => {
+            const openHour = room.openTime.getHours();
+            const closeHour = room.closeTime.getHours();
+            const isOpen = hour >= openHour && hour < closeHour;
+            // const isBooked = room.?.some(
+            //   b => b.startTime.getHours() <= hour && b.endTime.getHours() > hour
+            // );
+            // const bg = !isOpen ? "bg-gray-700" : isBooked ? "bg-red-500/50" : "bg-green-500/20";
+            const bg = "bg-gray-700"
+            return <td key={hour} className={`border h-8 ${bg}`} />;
+          });
 
-            <div className="flex gap-2 mt-3">
-              <Button size="sm" variant="outline" onClick={() => { setSelectedRoom(room); setShowModal(true); }}>Edit</Button>
-              <Button size="sm" variant="destructive" onClick={() => handleDelete(room.id)}>Delete</Button>
-            </div>
-          </div>
-        ))}
-      </div>
+          return (
+            <tr key={room.id}>
+              <td className="border p-1 font-semibold">{room.number}</td>
+              {cells}
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  </div>
 
-      {showModal && (
-        <RoomModal
-          room={selectedRoom}
-          onClose={() => setShowModal(false)}
-          refreshRooms={refreshRooms}
-        />
-      )}
-    </div>
+  {showModal && (
+    <RoomModal
+      room={selectedRoom}
+      onClose={() => setShowModal(false)}
+      refreshRooms={refreshRooms}
+    />
+  )}
+</div>
   );
 }

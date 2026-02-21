@@ -27,14 +27,14 @@ interface RoomModalProps {
   room: Room | null;
   onClose: () => void;
   refreshRooms: () => void;
-  organizations: Organization[]; // pass list of organizations for the dropdown
+//   organizations: Organization[]; // pass list of organizations for the dropdown
 }
 
 export default function RoomModal({
   room,
   onClose,
   refreshRooms,
-  organizations,
+  // organizations,
 }: RoomModalProps) {
   const [form, setForm] = useState<Partial<Room>>(
     room || {
@@ -45,7 +45,7 @@ export default function RoomModal({
       description: "",
       visible: true,
       reqApproval: false,
-      organizationId: organizations[0]?.id || "",
+      // organizationId: organizations[0]?.id || "",
       openTime: new Date(),
       closeTime: new Date(),
     },

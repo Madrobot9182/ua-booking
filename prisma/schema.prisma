@@ -14,29 +14,54 @@ datasource db {
 }
 
 model User {
-  id             String           @id @default(cuid())
-  email          String           @unique
-  role           Role             @default(USER)
+  id             String        @id @default(cuid())
+  email          String        @unique
+  role           Role          @default(USER)
   bookings       BookingRequest[]
-  createdAt      DateTime         @default(now())
+  createdAt      DateTime      @default(now())
   organizationId String?
-  organization   Organization?    @relation(fields: [organizationId], references: [id])
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+}
+
+model Organization {
+  id      String @id @default(cuid())
+  title   String
+  members User[]
+  rooms   Room[]
 }
 
 model Room {
-  id             String           @id @default(cuid())
+  id             String       @id @default(cuid())
   building       String
   number         String
-  floor          Int
+  floor          Int?
   capacity       Int
-  description    String
-  openTime       DateTime
-  closeTime      DateTime
-  reqApproval    Boolean
-  visible        Boolean
+  description    String?
+  openTime       DateTime     @db.Time
+  closeTime      DateTime     @db.Time
+  reqApproval    Boolean      @default(false)
+  visible        Boolean      @default(true)
+  isActive       Boolean      @default(true)
   organizationId String
-  organization   Organization     @relation(fields: [organizationId], references: [id])
+  organization   Organization @relation(fields: [organizationId], references: [id])
   bookings       BookingRequest[]
+  resources      RoomResource[]   // Many-to-many relation
+  availableOn    WeekDay[]    @default([MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY])
+}
+
+model Resource {
+  id    String @id @default(cuid())
+  name  String @unique
+  rooms RoomResource[]
+}
+
+model RoomResource {
+  roomId     String
+  room       Room     @relation(fields: [roomId], references: [id])
+  resourceId String
+  resource   Resource @relation(fields: [resourceId], references: [id])
+
+  @@id([roomId, resourceId]) // composite primary key
 }
 
 model BookingRequest {
@@ -51,13 +76,6 @@ model BookingRequest {
   description String?
   messages    Message[]
   createdAt   DateTime      @default(now())
-}
-
-model Organization {
-  id      String @id @default(cuid())
-  title   String
-  members User[]
-  rooms   Room[]
 }
 
 model Message {
@@ -79,4 +97,14 @@ enum Role {
   USER
   ADMIN
   DEV
+}
+
+enum WeekDay {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
 }
