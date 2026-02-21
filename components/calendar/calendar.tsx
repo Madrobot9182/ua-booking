@@ -30,7 +30,7 @@ export default function Calendar({
         <CalendarHeaderDate />
         <CalendarHeaderActions>
           <CalendarHeaderActionsMode />
-          <CalendarHeaderActionsAdd />
+          {/* <CalendarHeaderActionsAdd /> */}
         </CalendarHeaderActions>
       </CalendarHeader>
       <CalendarBody />
