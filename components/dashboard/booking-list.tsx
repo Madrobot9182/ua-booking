@@ -1,12 +1,13 @@
 import BookingCard from "./booking-card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
+import { BookingStatus } from "@/app/generated/prisma/enums"
 
 type Booking = {
   id: string
   startTime: Date
   endTime: Date
-  status: "PENDING" | "APPROVED" | "REJECTED"
+  status: BookingStatus
   description: string | null
   createdAt: Date
   room: {

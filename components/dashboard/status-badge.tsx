@@ -1,9 +1,10 @@
 import { Badge } from "@/components/ui/badge"
+import { BookingStatus } from "@/app/generated/prisma/enums"
 
 export default function StatusBadge({
   status,
 }: {
-  status: "PENDING" | "APPROVED" | "REJECTED"
+  status: BookingStatus
 }) {
   if (status === "APPROVED") {
     return (

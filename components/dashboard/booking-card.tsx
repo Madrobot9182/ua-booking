@@ -1,12 +1,13 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { format } from "date-fns"
 import StatusBadge from "./status-badge"
+import { BookingStatus } from "@/app/generated/prisma/enums"
 
 type Booking = {
   id: string
   startTime: Date
   endTime: Date
-  status: "PENDING" | "APPROVED" | "REJECTED"
+  status: BookingStatus
   description: string | null
   createdAt: Date
   room: {
