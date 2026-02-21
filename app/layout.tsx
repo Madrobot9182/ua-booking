@@ -32,7 +32,7 @@ export default function RootLayout({
       >
         <NeonAuthUIProvider
           authClient={authClient}
-          redirectTo="/account"
+          redirectTo="/dashboard"
           social={{
             providers: ["google"],
           }}

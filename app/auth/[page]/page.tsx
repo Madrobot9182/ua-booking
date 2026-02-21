@@ -9,7 +9,7 @@ export default function LoginPage() {
       <AuthView
         path="login"                   // Neon route
         view="SIGN_IN"                 // MUST be SIGN_IN to show social
-        redirectTo="/account"          // after login
+        redirectTo="/dashboard"          // after login
         socialLayout="vertical"             // layout for Google button
         className="w-full max-w-md"
         cardHeader={<h2 className="text-lg font-semibold">Welcome back!</h2>}

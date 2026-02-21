@@ -1,7 +1,8 @@
-"use client"
+"use client";
 
-import { motion } from "framer-motion"
-import { Calendar, LogOut } from "lucide-react"
+import { motion } from "framer-motion";
+import { Calendar, LogOut } from "lucide-react";
+import LogoutButton from "../logout-button";
 
 export default function Navbar() {
   return (
@@ -17,11 +18,8 @@ export default function Navbar() {
           Dashboard
         </div>
 
-        <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-          <LogOut className="w-4 h-4" />
-          Logout
-        </button>
+        <LogoutButton />
       </div>
     </motion.nav>
-  )
+  );
 }

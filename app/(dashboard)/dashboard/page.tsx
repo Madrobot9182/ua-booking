@@ -4,13 +4,17 @@ import Navbar from "@/components/dashboard/nav-bar";
 import SearchBar from "@/components/dashboard/search-bar"
 import CalendarDemo from "@/components/calendar-demo";
 import BookingList from "@/components/dashboard/booking-list";
+import { redirect } from "next/navigation";
 
 export default async function DashboardPage() {
-    const session = await auth.getSession()
-    if (!session) return null
+  const session = await auth.getSession()
+  // if (!session?.data?.session) {
+  //   // redirect to login page if not logged in
+  //   redirect("/auth/login");
+  // }
 
   const bookings = await prisma.bookingRequest.findMany({
-    where: { userId: session.data!.user.id },
+    where: { userId: session.data?.user.id },
     include: { room: true },
     orderBy: { startTime: "asc" },
   })
