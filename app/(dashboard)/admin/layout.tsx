@@ -1,3 +1,4 @@
+import AdminNavBar from "@/components/dashboard/admin-navbar";
 import { auth } from "@/lib/auth/server";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
@@ -14,9 +15,9 @@ export default async function AdminLayout({
     where: { id: session.data!.user.id },
   });
 
-  if (user?.role !== "ADMIN") {
+  if (user?.role === "USER") {
     redirect("/dashboard");
   }
 
-  return <>{children}</>;
+  return <div> <AdminNavBar /> {children}</div>;
 }
