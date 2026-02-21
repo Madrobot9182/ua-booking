@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, Clock, ArrowRight } from "lucide-react";
 
@@ -21,7 +21,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 
-import { createBooking } from "./actions"; // Import your server action
+import { createBooking } from "../../../../lib/booker-server-actions"; // Import your server action
 
 // Accept the room data passed down from the server component
 export default function BookRoomDialog({ room, userId }: { room: any, userId: any }) {
