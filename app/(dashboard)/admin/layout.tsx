@@ -1,3 +1,4 @@
+import AdminNavBar from "@/components/dashboard/admin-navbar";
 import { auth } from "@/lib/auth/server";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
@@ -18,5 +19,5 @@ export default async function AdminLayout({
     redirect("/dashboard");
   }
 
-  return <>{children}</>;
+  return <div> <AdminNavBar /> {children}</div>;
 }
