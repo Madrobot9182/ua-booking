@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth/server";
 import { prisma } from "@/lib/prisma";
 import Navbar from "@/components/dashboard/nav-bar";
-import SearchBar from "@/components/dashboard/search-bar";
+import BookingSearchBar from "@/components/dashboard/booking-search-bar";
 import CalendarDemo from "@/components/calendar-demo";
 import BookingList from "@/components/dashboard/booking-list";
 import { redirect } from "next/navigation";
@@ -24,7 +24,7 @@ export default async function DashboardPage() {
       <Navbar />
 
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
-        <SearchBar />
+        <BookingSearchBar />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 rounded-2xl border bg-card p-6 shadow-sm">

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 
 // We import the client-side pop-up button here
 import BookRoomDialog from "./BookRoomDialog"; 
+import BookingSearchBar from "@/components/dashboard/booking-search-bar";
 
 export default async function RoomList() {
   const session = await auth.getSession();
@@ -18,6 +19,11 @@ export default async function RoomList() {
   
   return (
     <div className="container mx-auto p-6 max-w-4xl">
+      
+      <div className="mb-4">
+        <BookingSearchBar />
+      </div>
+
       <div className="mb-6 flex justify-between items-end">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Room Directory</h1>
