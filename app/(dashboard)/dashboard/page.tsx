@@ -1,13 +1,13 @@
 import { auth } from "@/lib/auth/server";
 import { prisma } from "@/lib/prisma";
 import Navbar from "@/components/dashboard/nav-bar";
-import SearchBar from "@/components/dashboard/search-bar"
+import SearchBar from "@/components/dashboard/search-bar";
 import CalendarDemo from "@/components/calendar-demo";
 import BookingList from "@/components/dashboard/booking-list";
 import { redirect } from "next/navigation";
 
 export default async function DashboardPage() {
-  const session = await auth.getSession()
+  const session = await auth.getSession();
   // if (!session?.data?.session) {
   //   // redirect to login page if not logged in
   //   redirect("/auth/login");
@@ -15,11 +15,11 @@ export default async function DashboardPage() {
 
   const bookings = await prisma.bookingRequest.findMany({
     where: { userId: session.data?.user.id },
-    include: { room: true },
+    include: { room: true, user: true },
     orderBy: { startTime: "asc" },
-  })
+  });
 
-   return (
+  return (
     <div className="min-h-screen">
       <Navbar />
 
@@ -32,10 +32,10 @@ export default async function DashboardPage() {
           </div>
 
           <div className="lg:col-span-1 rounded-2xl border bg-card p-6 shadow-sm">
-              <BookingList bookings={bookings} />
+            <BookingList bookings={bookings} />
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }
