@@ -3,9 +3,9 @@ import { Badge } from "@/components/ui/badge"
 export default function StatusBadge({
   status,
 }: {
-  status: "PENDING" | "ACCEPTED"
+  status: "PENDING" | "APPROVED" | "REJECTED"
 }) {
-  if (status === "ACCEPTED") {
+  if (status === "APPROVED") {
     return (
       <Badge variant="default">
         Accepted

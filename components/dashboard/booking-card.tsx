@@ -6,7 +6,7 @@ type Booking = {
   id: string
   startTime: Date
   endTime: Date
-  status: "PENDING" | "ACCEPTED"
+  status: "PENDING" | "APPROVED" | "REJECTED"
   description: string | null
   createdAt: Date
   room: {
