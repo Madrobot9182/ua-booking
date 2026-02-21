@@ -14,43 +14,59 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  role      Role     @default(USER)
-  bookings  BookingRequest[]
-  createdAt DateTime @default(now())
+  id             String           @id @default(cuid())
+  email          String           @unique
+  role           Role             @default(USER)
+  bookings       BookingRequest[]
+  createdAt      DateTime         @default(now())
+  organizationId String?
+  organization   Organization?    @relation(fields: [organizationId], references: [id])
 }
 
 model Room {
-  id            String   @id @default(cuid())
-  building      String
-  number        String
-  capacity      Int
-  description   String
-  bookings      BookingRequest[]
+  id             String           @id @default(cuid())
+  building       String
+  number         String
+  floor          Int
+  capacity       Int
+  description    String
+  openTime       DateTime
+  closeTime      DateTime
+  reqApproval    Boolean
+  visible        Boolean
+  organizationId String
+  organization   Organization     @relation(fields: [organizationId], references: [id])
+  bookings       BookingRequest[]
 }
 
 model BookingRequest {
-  id          String   @id @default(cuid())
+  id          String        @id @default(cuid())
   roomId      String
-  room        Room     @relation(fields: [roomId], references: [id])
+  room        Room          @relation(fields: [roomId], references: [id])
   userId      String
-  user        User     @relation(fields: [userId], references: [id])
+  user        User          @relation(fields: [userId], references: [id])
   startTime   DateTime
   endTime     DateTime
   status      BookingStatus @default(PENDING)
   description String?
   messages    Message[]
-  createdAt   DateTime @default(now())
+  createdAt   DateTime      @default(now())
+}
+
+model Organization {
+  id      String @id @default(cuid())
+  title   String
+  members User[]
+  rooms   Room[]
 }
 
 model Message {
-  id        String   @id @default(cuid())
+  id        String         @id @default(cuid())
   bookingId String
   booking   BookingRequest @relation(fields: [bookingId], references: [id])
   senderId  String
   content   String
-  createdAt DateTime @default(now())
+  createdAt DateTime       @default(now())
 }
 
 enum BookingStatus {
@@ -62,4 +78,5 @@ enum BookingStatus {
 enum Role {
   USER
   ADMIN
+  DEV
 }
