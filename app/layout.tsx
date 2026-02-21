@@ -2,6 +2,7 @@ import { authClient } from "@/lib/auth/client";
 import { NeonAuthUIProvider } from "@neondatabase/auth/react";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { ThemeProvider } from "next-themes";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -31,12 +32,14 @@ export default function RootLayout({
       >
         <NeonAuthUIProvider
           authClient={authClient}
-          redirectTo="/account"
+          redirectTo="/dashboard"
           social={{
-            providers: ['google']
+            providers: ["google"],
           }}
         >
-          {children}
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            {children}
+          </ThemeProvider>
         </NeonAuthUIProvider>
       </body>
     </html>
