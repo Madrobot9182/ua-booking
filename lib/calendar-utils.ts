@@ -1,7 +1,7 @@
-import { BookingRequest } from "@/app/generated/prisma/browser"
+import { BookingWithRelations } from "@/lib/types/prisma-type"
 import { CalendarEvent } from "@/components/calendar/calendar-types"
 
-export function mapBookingsToEvents(bookings: BookingRequest[]): CalendarEvent[] {
+export function mapBookingsToEvents(bookings: BookingWithRelations[]): CalendarEvent[] {
   return bookings.map((b) => ({
     id: b.id,
     title: `${b.room.building} ${b.room.number} (${b.status})`,
@@ -9,7 +9,7 @@ export function mapBookingsToEvents(bookings: BookingRequest[]): CalendarEvent[]
     end: new Date(b.endTime),
     color: b.status === 'PENDING' ? 'orange' : b.status === 'APPROVED' ? 'green' : 'gray',
     extendedProps: {
-      user: b.user.name,
+      user: b.user.email,
       status: b.status,
     },
   }))

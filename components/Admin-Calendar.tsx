@@ -2,12 +2,12 @@
 
 import { useState } from 'react'
 import { Mode } from './calendar/calendar-types'
-import { BookingRequest } from "@/app/generated/prisma/browser"
+import { BookingWithRelations } from "@/lib/types/prisma-type"
 import { mapBookingsToEvents } from '@/lib/calendar-utils'
 import Calendar from './calendar/calendar'
 
 interface AdminCalendarProps {
-  bookings: BookingRequest[]
+  bookings: BookingWithRelations[]
 }
 
 export default function AdminCalendar({ bookings }: AdminCalendarProps) {
