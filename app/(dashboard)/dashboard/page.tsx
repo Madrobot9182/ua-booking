@@ -1,14 +1,19 @@
 import { auth } from "@/lib/auth/server";
 import { prisma } from "@/lib/prisma";
-import Navbar from "@/components/dashboard/NavBar";
-import SearchBar from "@/components/dashboard/SearchBar"
+import Navbar from "@/components/dashboard/nav-bar";
+import SearchBar from "@/components/dashboard/search-bar"
 import CalendarDemo from "@/components/calendar-demo";
+import BookingList from "@/components/dashboard/booking-list";
 
-export default function DashboardPage() {
-  const mockBookings = [
-    { id: "1", title: "Studio Session", date: "March 2", status: "upcoming" },
-    { id: "2", title: "Event Review", date: "March 5", status: "review" }
-  ]
+export default async function DashboardPage() {
+    const session = await auth.getSession()
+    if (!session) return null
+
+  const bookings = await prisma.bookingRequest.findMany({
+    where: { userId: session.data!.user.id },
+    include: { room: true },
+    orderBy: { startTime: "asc" },
+  })
 
    return (
     <div className="min-h-screen">
@@ -23,6 +28,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="lg:col-span-1 rounded-2xl border bg-card p-6 shadow-sm">
+              <BookingList bookings={bookings} />
           </div>
         </div>
       </div>
