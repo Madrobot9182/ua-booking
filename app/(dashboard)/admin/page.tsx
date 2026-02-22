@@ -1,4 +1,3 @@
-import { auth } from "@/lib/auth/server";
 import { prisma } from "@/lib/prisma";
 import PendingBookings from "@/components/dashboard/pending-bookings";
 import AdminCalendar from "@/components/Admin-Calendar";
@@ -18,14 +17,13 @@ export default async function AdminDashBoard() {
 
   return (
     <main className="flex flex-col md:flex-row gap-6 p-6 bg-[rgb(var(--background))] text-[rgb(var(--foreground))] min-h-screen">
-      {/* Left: Pending Bookings List */}
-      <div className="w-full md:w-1/3 space-y-4">
+      <div className="w-full md:w-1/3 space-y-4 rounded-2xl bg-card p-6 shadow-sm">
         <h2 className="text-lg font-semibold">Pending Bookings</h2>
         <PendingBookings bookings={pending} />
       </div>
 
       {/* Right: Calendar */}
-      <div className="w-full md:w-2/3">
+      <div className="w-full md:w-2/3 rounded-2xl bg-card p-6 shadow-sm">
         <h2 className="text-lg font-semibold">Calendar</h2>
         <AdminCalendar bookings={bookings} />
       </div>

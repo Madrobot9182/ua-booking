@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Room, Organization } from "@/app/generated/prisma/browser";
+import { useState, useEffect } from "react";
+import { Room, Organization, WeekDay } from "@/app/generated/prisma/browser";
 import {
   Dialog,
   DialogContent,
@@ -27,41 +27,86 @@ interface RoomModalProps {
   room: Room | null;
   onClose: () => void;
   refreshRooms: () => void;
-//   organizations: Organization[]; // pass list of organizations for the dropdown
+  organizations: Organization[];
+}
+
+interface RoomFormData {
+  number: string;
+  building: string;
+  floor?: number | null;
+  capacity: number;
+  description?: string | null;
+  visible: boolean;
+  reqApproval: boolean;
+  organizationId: string;
+  openTime: string; // HH:MM
+  closeTime: string; // HH:MM
+  isActive?: boolean;
+  availableOn?: WeekDay[];
 }
 
 export default function RoomModal({
   room,
   onClose,
   refreshRooms,
-  // organizations,
+  organizations,
 }: RoomModalProps) {
-  const [form, setForm] = useState<Partial<Room>>(
-    room || {
-      number: "",
-      building: "",
-      floor: 0,
-      capacity: 0,
-      description: "",
-      visible: true,
-      reqApproval: false,
-      // organizationId: organizations[0]?.id || "",
-      openTime: new Date(),
-      closeTime: new Date(),
-    },
-  );
+  const [form, setForm] = useState<RoomFormData>({
+    number: "",
+    building: "",
+    floor: 0,
+    capacity: 0,
+    description: "",
+    visible: true,
+    reqApproval: false,
+    organizationId: "",
+    openTime: "",
+    closeTime: "",
+    isActive: true,
+    availableOn: ["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY"],
+  });
+
+  // Populate form when editing
+  useEffect(() => {
+    if (room) {
+      setForm({
+        number: room.number,
+        building: room.building,
+        floor: room.floor,
+        capacity: room.capacity,
+        description: room.description,
+        visible: room.visible,
+        reqApproval: room.reqApproval,
+        organizationId: room.organizationId,
+        openTime: new Date(room.openTime).toISOString().slice(11,16),
+        closeTime: new Date(room.closeTime).toISOString().slice(11,16),
+        isActive: room.isActive,
+        availableOn: room.availableOn,
+      });
+    }
+  }, [room]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (room) {
-      await updateRoomAction({ ...form, id: room.id } as Room);
-    } else {
-      await createRoomAction(form as Room);
+    if (!form.organizationId) {
+      alert("Please select an organization.");
+      return;
     }
 
-    onClose();
-    await refreshRooms();
+    try {
+      if (room) {
+        await updateRoomAction(room.id, form);
+      } else {
+        await createRoomAction(form);
+      }
+
+      onClose();
+      await refreshRooms();
+    } catch (err) {
+      console.error("Room save failed:", err);
+      alert("Failed to save room. Check console.");
+    }
   };
 
   return (
@@ -71,117 +116,87 @@ export default function RoomModal({
           <DialogTitle>{room ? "Edit Room" : "Create Room"}</DialogTitle>
         </DialogHeader>
 
-        <Label>Building Name</Label>
-
-        <Input
-          placeholder="Building"
-          value={form.building || ""}
-          onChange={(e) => setForm({ ...form, building: e.target.value })}
-        />
-        <Label>Room Number</Label>
-
         <form className="space-y-4 mt-2" onSubmit={handleSubmit}>
+          <Label>Building Name</Label>
           <Input
-            placeholder="Room Number"
-            value={form.number || ""}
+            value={form.building}
+            onChange={(e) => setForm({ ...form, building: e.target.value })}
+          />
+
+          <Label>Room Number</Label>
+          <Input
+            value={form.number}
             onChange={(e) => setForm({ ...form, number: e.target.value })}
           />
+
           <Label>Floor</Label>
           <Input
             type="number"
-            placeholder="Floor"
             value={form.floor ?? 0}
-            onChange={(e) =>
-              setForm({ ...form, floor: Number(e.target.value) })
-            }
+            onChange={(e) => setForm({ ...form, floor: Number(e.target.value) })}
           />
-          <Label>Room Capacity</Label>
 
+          <Label>Capacity</Label>
           <Input
             type="number"
-            placeholder="Capacity"
-            value={form.capacity ?? 0}
-            onChange={(e) =>
-              setForm({ ...form, capacity: Number(e.target.value) })
-            }
+            value={form.capacity}
+            onChange={(e) => setForm({ ...form, capacity: Number(e.target.value) })}
           />
+
           <Label>Open Time</Label>
           <Input
             type="time"
-            placeholder="Open Time"
-            value={
-              form.openTime ? form.openTime.toISOString().slice(11, 16) : ""
-            }
-            onChange={(e) => {
-              const [hours, minutes] = e.target.value.split(":").map(Number);
-              const d = new Date(form.openTime || new Date());
-              d.setHours(hours, minutes);
-              setForm({ ...form, openTime: d });
-            }}
+            value={form.openTime}
+            onChange={(e) => setForm({ ...form, openTime: e.target.value })}
           />
 
-          <Label>Closing Time</Label>
+          <Label>Close Time</Label>
           <Input
             type="time"
-            placeholder="Close Time"
-            value={
-              form.closeTime ? form.closeTime.toISOString().slice(11, 16) : ""
-            }
-            onChange={(e) => {
-              const [hours, minutes] = e.target.value.split(":").map(Number);
-              const d = new Date(form.closeTime || new Date());
-              d.setHours(hours, minutes);
-              setForm({ ...form, closeTime: d });
-            }}
+            value={form.closeTime}
+            onChange={(e) => setForm({ ...form, closeTime: e.target.value })}
           />
 
-          {/* Description */}
           <Label>Description</Label>
           <Textarea
-            placeholder="Description"
             value={form.description || ""}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
           />
-          {/* <Select
-            value={form.organizationId || ""}
-            onValueChange={value => setForm({ ...form, organizationId: value })}
+
+          <Select
+            value={form.organizationId}
+            onValueChange={(value) => setForm({ ...form, organizationId: value })}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select Organization" />
             </SelectTrigger>
             <SelectContent>
-              {organizations.map(org => (
+              {organizations.map((org) => (
                 <SelectItem key={org.id} value={org.id}>
                   {org.title}
                 </SelectItem>
               ))}
             </SelectContent>
-          </Select> */}
+          </Select>
 
           <label className="flex items-center gap-2">
             <Checkbox
-              checked={form.visible ?? true}
-              onCheckedChange={(checked) =>
-                setForm({ ...form, visible: checked as boolean })
-              }
+              checked={form.visible}
+              onCheckedChange={(checked) => setForm({ ...form, visible: checked as boolean })}
             />
             <span>Visible to Users</span>
           </label>
 
           <label className="flex items-center gap-2">
             <Checkbox
-              checked={form.reqApproval ?? false}
-              onCheckedChange={(checked) =>
-                setForm({ ...form, reqApproval: checked as boolean })
-              }
+              checked={form.reqApproval}
+              onCheckedChange={(checked) => setForm({ ...form, reqApproval: checked as boolean })}
             />
             <span>Requires Approval</span>
           </label>
 
           <DialogFooter className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
+            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
             <Button type="submit">{room ? "Save" : "Create"}</Button>
           </DialogFooter>
         </form>
