@@ -7,7 +7,8 @@ import { getBookingRequest, getRooms } from "@/lib/room-server-action";
 
 export default async function DashboardPage() {
   const session = await auth.getSession();
-
+  if (!session) return null;
+  
   const initialRooms = await getRooms()
   const bookings = await getBookingRequest(session.data!.user.id)
 
