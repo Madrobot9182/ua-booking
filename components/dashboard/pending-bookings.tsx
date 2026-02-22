@@ -20,7 +20,7 @@ export default function PendingBookings({ bookings }: any) {
             <p className="font-semibold">
               {b.room.building} {b.room.number}
             </p>
-            <p>
+            <p suppressHydrationWarning>
               {new Date(b.startTime).toLocaleString()}
             </p>
           </div>

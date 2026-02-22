@@ -1,5 +1,5 @@
 "use client"
-
+import { useEffect } from 'react'
 import { useState } from 'react'
 import { Mode } from './calendar/calendar-types'
 import { BookingWithRelations } from "@/lib/types/prisma-type"
@@ -15,7 +15,9 @@ export default function AdminCalendar({ bookings }: AdminCalendarProps) {
   const [events, setEvents] = useState(mapBookingsToEvents(bookings))
   const [mode, setMode] = useState<Mode>('week')
   const [date, setDate] = useState<Date>(new Date())
-
+  useEffect(() => {
+    setEvents(mapBookingsToEvents(bookings))
+  }, [bookings])
   return (
     <Calendar
         events={events}
