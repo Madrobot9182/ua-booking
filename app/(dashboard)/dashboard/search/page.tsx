@@ -1,21 +1,13 @@
-import React from "react";
-import {
-  Building2,
-  Hash,
-  AlignLeft,
-  Users,
-  Clock,
-  Building,
-} from "lucide-react";
+import { Building2, Hash, AlignLeft, Users, Clock } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth/server";
-// shadcn components
 import { Card, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 // We import the client-side pop-up button here
 import BookRoomDialog from "./BookRoomDialog";
 import BookingSearchBar from "@/components/dashboard/booking-search-bar";
+
 export default async function RoomList({
   searchParams,
 }: {
@@ -49,7 +41,7 @@ export default async function RoomList({
 
   var capacity_num;
   if (capacity) {
-    capacity_num = parseInt(capacity.slice(0, -1));
+    capacity_num = parseInt(capacity);
   }
 
   const conflictingBookings = await prisma.bookingRequest.findMany({
@@ -63,19 +55,14 @@ export default async function RoomList({
   });
 
   const busyRoomIds = conflictingBookings.map((booking) => booking.roomId); //get only the IDs
-
+  console.log(capacity_num)
   const data = await prisma.room.findMany({
     where: {
-      capacity: {
-        gte: capacity_num,
-      },
-      building: building,
-
-      openTime: { lte: startTime }, // Opens before or exactly at target start
-      closeTime: { gte: endTime },
-      id: {
-        notIn: busyRoomIds,
-      }, // Closes after or exactly at target end
+      ...(capacity_num !== undefined && { capacity: { gte: capacity_num } }),
+      ...(building && { building }),
+      ...(startTime && { openTime: { lte: startTime } }),
+      ...(endTime && { closeTime: { gte: endTime } }),
+      ...(busyRoomIds.length > 0 && { id: { notIn: busyRoomIds } }),
     },
   });
 
