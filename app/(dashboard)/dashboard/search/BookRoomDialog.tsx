@@ -21,7 +21,7 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
-import { createBooking } from "@/lib/booker-server-actions";
+import { createBooking } from "@/lib/booking-server-actions"
 import { Room } from "@/app/generated/prisma/client";
 import { useRouter } from "next/navigation";
 
