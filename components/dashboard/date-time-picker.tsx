@@ -39,7 +39,7 @@ export function DateTimePicker({
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          className="w-[100px] justify-start text-left font-normal"
+          className="w-[220px] justify-start text-left font-normal"
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
           {value ? format(value, "MMM d, HH:mm") : placeholder}

@@ -1,36 +1,46 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { addHours, isBefore } from "date-fns"
-import { DateTimePicker } from "./date-time-picker"
+import * as React from "react";
+import { addHours, isBefore } from "date-fns";
+import { DateTimePicker } from "./date-time-picker";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Search, Sparkles, Loader2 } from "lucide-react"
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Search, Sparkles, Loader2 } from "lucide-react";
 import { redirect } from "next/navigation";
-import { handleSearchRedirect } from "@/components/dashboard/search-actions";
-export default function BookingSearchBar() {
-  const [start, setStart] = React.useState<Date | undefined>()
-  const [end, setEnd] = React.useState<Date | undefined>()
-  const [building, setBuilding] = React.useState("")
-  const [capacity, setCapacity] = React.useState("")
-  const [aiQuery, setAiQuery] = React.useState("")
-  const [aiExpanded, setAiExpanded] = React.useState(false)
-  const [aiLoading, setAiLoading] = React.useState(false)
+import { handleSearchRedirect } from "@/lib/search-actions";
+import { Room } from "@/app/generated/prisma/client";
+
+interface BookingSearchBarProp {
+  initialRooms: Room[];
+}
+
+export default function BookingSearchBar({
+  initialRooms,
+}: BookingSearchBarProp)  {
+  const [start, setStart] = React.useState<Date | undefined>();
+  const [end, setEnd] = React.useState<Date | undefined>();
+  const [building, setBuilding] = React.useState("");
+  const [capacity, setCapacity] = React.useState("");
+  const [aiQuery, setAiQuery] = React.useState("");
+  const [aiExpanded, setAiExpanded] = React.useState(false);
+  const [aiLoading, setAiLoading] = React.useState(false);
+  const buildings = ["ALL", ...Array.from(new Set(initialRooms.map(r => r.building)))];
+
   const executeSearch = () => {
     const searchData: Record<string, string> = {};
 
-  //Only add values if they exist
+    //Only add values if they exist
     if (building) searchData.building = building;
     if (capacity) searchData.capacity = capacity;
-    
+
     // Convert Dates to ISO strings (or your preferred format)
     if (start) searchData.start = start.toISOString();
     if (end) searchData.end = end.toISOString();
@@ -38,49 +48,49 @@ export default function BookingSearchBar() {
     // 4. Generate the safe query string
     const params = new URLSearchParams(searchData);
     const queryString = `?${params.toString()}`;
-      
-    handleSearchRedirect(queryString)
-    }
+
+    handleSearchRedirect(queryString);
+  };
+
   // Auto-set end = +1 hour
   React.useEffect(() => {
     if (start) {
-      const defaultEnd = addHours(start, 1)
+      const defaultEnd = addHours(start, 1);
       if (!end || isBefore(end, start)) {
-        setEnd(defaultEnd)
+        setEnd(defaultEnd);
       }
     }
-  }, [start])
+  }, [start]);
 
   // ESC collapses AI mode
   React.useEffect(() => {
     function handleEsc(e: KeyboardEvent) {
       if (e.key === "Escape") {
-        setAiExpanded(false)
+        setAiExpanded(false);
       }
     }
-    window.addEventListener("keydown", handleEsc)
-    return () => window.removeEventListener("keydown", handleEsc)
-  }, [])
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, []);
 
   async function handleAiSubmit() {
-    if (!aiQuery) return
-    setAiLoading(true)
+    if (!aiQuery) return;
+    setAiLoading(true);
 
     // Placeholder for AI processing
-    await new Promise((res) => setTimeout(res, 1500))
+    await new Promise((res) => setTimeout(res, 1500));
 
-    setAiLoading(false)
+    setAiLoading(false);
   }
 
   const suggestions = [
     "Room for 20 students tomorrow morning",
     "Large lecture hall next Friday 2pm",
     "Quiet study room for 4 this afternoon",
-  ]
+  ];
 
   return (
     <div className="flex flex-col gap-2">
-
       {/* Header badge when AI active */}
       {aiExpanded && (
         <div className="flex items-center gap-2">
@@ -95,7 +105,6 @@ export default function BookingSearchBar() {
       )}
 
       <div className="flex items-center gap-4 p-4 border rounded-lg bg-muted/40">
-
         {/* AI Search */}
         <div
           className={`
@@ -114,17 +123,15 @@ export default function BookingSearchBar() {
           />
 
           {/* Submit Button Inside Input */}
-          <div className={`absolute right-1 top-1 ${aiExpanded ? "visible" : "hidden w-0"}`}>
+          <div
+            className={`absolute right-1 top-1 ${aiExpanded ? "visible" : "hidden w-0"}`}
+          >
             <Button
               size="sm"
               onClick={handleAiSubmit}
               disabled={aiLoading || !aiQuery}
             >
-              {aiLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                "Go"
-              )}
+              {aiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Go"}
             </Button>
           </div>
         </div>
@@ -142,23 +149,23 @@ export default function BookingSearchBar() {
               <SelectValue placeholder="Building" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ECHA">ECHA</SelectItem>
-              <SelectItem value="CCIS">CCIS</SelectItem>
-              <SelectItem value="krha">KRHA</SelectItem>
+              {buildings.map(b => (
+                <SelectItem key={b} value={b}>
+                  {b}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
 
-          <Select onValueChange={setCapacity}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Capacity" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="5">5+</SelectItem>
-              <SelectItem value="10">10+</SelectItem>
-              <SelectItem value="20">20+</SelectItem>
-              <SelectItem value="50">50+</SelectItem>
-            </SelectContent>
-          </Select>
+            <Input
+              className="max-w-28"
+              type="number"
+              min={1}
+              step={1}
+              placeholder="Capacity"
+              value={capacity || ""} // controlled input
+              onChange={(e) => setCapacity(e.target.value)}
+            />
 
           <DateTimePicker
             value={start}
@@ -197,5 +204,5 @@ export default function BookingSearchBar() {
         </div>
       )}
     </div>
-  )
+  );
 }

@@ -1,21 +1,14 @@
-import React from "react";
-import {
-  Building2,
-  Hash,
-  AlignLeft,
-  Users,
-  Clock,
-  Building,
-} from "lucide-react";
+import { Building2, Hash, AlignLeft, Users, Clock } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth/server";
-// shadcn components
 import { Card, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 // We import the client-side pop-up button here
 import BookRoomDialog from "./BookRoomDialog";
 import BookingSearchBar from "@/components/dashboard/booking-search-bar";
+import { getRooms } from "@/lib/room-server-action";
+
 export default async function RoomList({
   searchParams,
 }: {
@@ -31,6 +24,8 @@ export default async function RoomList({
     // Format it to local time zone
     return dateObj.toLocaleTimeString();
   }
+  const initialRooms = await getRooms();
+
   //get user ID
   const session = await auth.getSession();
   const userId = session.data!.user.id;
@@ -38,18 +33,13 @@ export default async function RoomList({
   const params = await searchParams;
   const capacity = params.capacity;
   const building = params.building;
-  var startTime;
-  var endTime;
-  if (params.start) {
-    startTime = new Date(params.start);
-  }
-  if (params.end) {
-    endTime = new Date(params.end);
-  }
+
+  const startTime = params?.start ? new Date(params.start) : undefined;
+  const endTime = params?.end ? new Date(params.end) : undefined;
 
   var capacity_num;
   if (capacity) {
-    capacity_num = parseInt(capacity.slice(0, -1));
+    capacity_num = parseInt(capacity);
   }
 
   const conflictingBookings = await prisma.bookingRequest.findMany({
@@ -63,28 +53,30 @@ export default async function RoomList({
   });
 
   const busyRoomIds = conflictingBookings.map((booking) => booking.roomId); //get only the IDs
-
   const data = await prisma.room.findMany({
     where: {
-      capacity: {
-        gte: capacity_num,
-      },
-      building: building,
-
-      openTime: { lte: startTime }, // Opens before or exactly at target start
-      closeTime: { gte: endTime },
-      id: {
-        notIn: busyRoomIds,
-      }, // Closes after or exactly at target end
+      ...(capacity_num !== undefined && { capacity: { gte: capacity_num } }),
+      ...(building && building !== "ALL" && { building }), // only include if not "ALL"
+      ...(startTime && { openTime: { lte: startTime } }),
+      ...(endTime && { closeTime: { gte: endTime } }),
+      ...(busyRoomIds.length > 0 && { id: { notIn: busyRoomIds } }),
+      ...(startTime &&
+        endTime && {
+          bookings: {
+            none: {
+              status: "APPROVED",
+              startTime: { lt: endTime },
+              endTime: { gt: startTime },
+            },
+          },
+        }),
     },
   });
 
-  // console.log(convertTime(data[0].openTime))
-
   return (
-    <div className="container mx-auto p-6 max-w-4xl">
+    <div className="container mx-auto p-6 max-w-7xl">
       <div className="mb-4">
-        <BookingSearchBar />
+        <BookingSearchBar initialRooms={initialRooms} />
       </div>
 
       <div className="mb-6 flex justify-between items-end">
@@ -120,6 +112,15 @@ export default async function RoomList({
                 <Badge variant="secondary" className="font-mono text-s">
                   Floor: {room.floor} <br></br> ID: {room.id}
                 </Badge>
+                {room.reqApproval ? (
+                  <Badge className="bg-amber-100 text-amber-800 border border-amber-300 text-xs">
+                    Requires Approval
+                  </Badge>
+                ) : (
+                  <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs">
+                    Instant Booking
+                  </Badge>
+                )}
               </div>
 
               <p className="text-muted-foreground text-sm flex items-start gap-2 mt-3 mb-4 max-w-2xl">
@@ -150,7 +151,12 @@ export default async function RoomList({
             {/* Right Section: The Modal Button */}
             <div className="p-6 pt-0 sm:pt-6 border-t sm:border-t-0 sm:border-l flex items-center justify-center w-full sm:w-40 bg-muted/10 sm:h-full">
               {/* This replaces the button and handles all the client-side pop-up logic */}
-              <BookRoomDialog room={room} userId={userId} />
+              <BookRoomDialog
+                room={room}
+                userId={userId}
+                defaultStartTime={startTime}
+                defaultEndTime={endTime}
+              />
             </div>
           </Card>
         ))}
