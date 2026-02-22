@@ -106,9 +106,19 @@ export async function getRooms() {
 }
 
 // -------- GET ORGANIZATIONS --------
-export async function getOrganizations() {
-  return prisma.organization.findMany({
-    select: { id: true, title: true },
-    orderBy: { title: "asc" },
+export async function getCurrentUserOrganization(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { organizationId: true },
+  });
+
+  if (!user?.organizationId) return null;
+
+  return await prisma.organization.findMany({
+    where: { id: user.organizationId },
+    // include: {
+    //   rooms: true,
+    //   members: { select: { id: true, email: true, role: true } },
+    // },
   });
 }
