@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Textarea } from "@/components/ui/textarea"
 import { BookingStatus } from "@/app/generated/prisma/enums"
 import { reviewBooking } from "@/lib/server-actions"
-
+import { useRouter } from 'next/navigation'
 interface Props {
   booking: any
   open: boolean
@@ -21,11 +21,12 @@ export default function BookingReviewDialog({
 }: Props) {
   const [decision, setDecision] = useState<BookingStatus | null>(null)
   const [reason, setReason] = useState("")
-
+  const router = useRouter()
   async function handleConfirm() {
     if (!decision) return
     await reviewBooking(booking.id, decision, reason)
     onOpenChange(false)
+    router.refresh()
   }
 
   if (!booking) return null

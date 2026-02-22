@@ -172,7 +172,7 @@ export default function RoomModal({
             </SelectTrigger>
             <SelectContent>
               {organizations.map((org) => (
-                <SelectItem key={org.id} value={org.id}>
+                <SelectItem key={org.id} value={String(org.id)}>
                   {org.title}
                 </SelectItem>
               ))}
