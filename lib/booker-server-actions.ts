@@ -1,10 +1,15 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { confirmBooking } from "./mailer-server-actions";
+import { approveBooking, confirmBooking } from "./mailer-server-actions";
 
 export async function createBooking(bookingData: any) {
   try {
+    const reqApproval = await prisma.room.findUnique({
+      where: { id: bookingData.roomId },
+      select: { reqApproval: true },
+    });
+
     const newBooking = await prisma.bookingRequest.create({
       data: {
         roomId: bookingData.roomId,
@@ -18,7 +23,12 @@ export async function createBooking(bookingData: any) {
 
     console.log("Booking created with id:", newBooking.id);
 
-    await confirmBooking(newBooking.id);
+    // Check if room requires confirmation or not
+    if (reqApproval) {
+      await confirmBooking(newBooking.id);
+    } else {
+      await approveBooking(newBooking.id);
+    }
 
     return { success: true, booking: newBooking };
   } catch (e) {

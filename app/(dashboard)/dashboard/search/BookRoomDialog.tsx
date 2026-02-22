@@ -42,7 +42,6 @@ export default function BookRoomDialog({
 
   const endTimeString = defaultEndTime ? format(defaultEndTime, "HH:mm") : "";
 
-  console.count(startTimeString);
   const [startDate, setStartDate] = useState<Date | undefined>(
     defaultStartTime,
   );
@@ -50,6 +49,7 @@ export default function BookRoomDialog({
   const [endDate, setEndDate] = useState<Date | undefined>(defaultEndTime);
   const [endTime, setEndTime] = useState<string>(endTimeString);
   const [description, setDescription] = useState<string>("");
+  const [open, setOpen] = useState(false);
 
   async function handleConfirm() {
     const bookingData = {
@@ -62,14 +62,14 @@ export default function BookRoomDialog({
 
     const response = await createBooking(bookingData);
     if (response.success) {
-      alert(`Successfully booked ${room.building} ${room.number}!`);
+      setOpen(false);
     }
   }
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button className="w-full sm:w-auto">Book Room</Button>
+    <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+        <Button onClick={() => setOpen(true)} className="w-full sm:w-auto">Book Room</Button>
       </DialogTrigger>
 
       <DialogContent className="md:max-w-4xl max-h-[90vh] overflow-y-auto">

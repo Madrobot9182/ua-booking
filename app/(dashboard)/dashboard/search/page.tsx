@@ -33,11 +33,9 @@ export default async function RoomList({
   const params = await searchParams;
   const capacity = params.capacity;
   const building = params.building;
-  
+
   const startTime = params?.start ? new Date(params.start) : undefined;
   const endTime = params?.end ? new Date(params.end) : undefined;
-
-  
 
   var capacity_num;
   if (capacity) {
@@ -62,6 +60,16 @@ export default async function RoomList({
       ...(startTime && { openTime: { lte: startTime } }),
       ...(endTime && { closeTime: { gte: endTime } }),
       ...(busyRoomIds.length > 0 && { id: { notIn: busyRoomIds } }),
+      ...(startTime &&
+        endTime && {
+          bookings: {
+            none: {
+              status: "APPROVED",
+              startTime: { lt: endTime },
+              endTime: { gt: startTime },
+            },
+          },
+        }),
     },
   });
 
@@ -104,6 +112,15 @@ export default async function RoomList({
                 <Badge variant="secondary" className="font-mono text-s">
                   Floor: {room.floor} <br></br> ID: {room.id}
                 </Badge>
+                {room.reqApproval ? (
+                  <Badge className="bg-amber-100 text-amber-800 border border-amber-300 text-xs">
+                    Requires Approval
+                  </Badge>
+                ) : (
+                  <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs">
+                    Instant Booking
+                  </Badge>
+                )}
               </div>
 
               <p className="text-muted-foreground text-sm flex items-start gap-2 mt-3 mb-4 max-w-2xl">
