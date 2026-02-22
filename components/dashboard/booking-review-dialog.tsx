@@ -1,17 +1,24 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Textarea } from "@/components/ui/textarea"
-import { BookingStatus } from "@/app/generated/prisma/enums"
-import { reviewBooking } from "@/lib/server-actions"
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import { BookingStatus } from "@/app/generated/prisma/enums";
+import { reviewBooking } from "@/lib/server-actions";
+import { useRouter } from "next/navigation";
+import { AlertTriangle } from "lucide-react";
+import { checkBookingConflict, deleteBookingConflicts } from "@/lib/booking-server-conflict";
 interface Props {
-  booking: any
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  booking: any;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 export default function BookingReviewDialog({
@@ -19,18 +26,45 @@ export default function BookingReviewDialog({
   open,
   onOpenChange,
 }: Props) {
-  const [decision, setDecision] = useState<BookingStatus | null>(null)
-  const [reason, setReason] = useState("")
-  const router = useRouter()
+  const [decision, setDecision] = useState<BookingStatus | null>(null);
+  const [reason, setReason] = useState("");
+  const [hasConflict, setHasConflict] = useState(false);
+  const [isCheckingConflict, setIsCheckingConflict] = useState(false);
+  const router = useRouter();
+
+  // Check for conflicts whenever the dialog opens or the booking changes
+  useEffect(() => {
+    async function verifyConflict() {
+      if (!open || !booking) return;
+      console.log("CONFLICT!")
+      setIsCheckingConflict(true);
+      try {
+        const result = await checkBookingConflict(
+          booking.roomId,
+          booking.startTime,
+          booking.endTime,
+          booking.id,
+        );
+        setHasConflict(result.hasConflict);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setIsCheckingConflict(false);
+      }
+    }
+
+    verifyConflict()
+  }, [open, booking])
   async function handleConfirm() {
-    if (!decision) return
-    await reviewBooking(booking.id, decision, reason)
-    onOpenChange(false)
-    router.refresh()
+    if (!decision) return;
+    await reviewBooking(booking.id, decision, reason);
+    onOpenChange(false);
+    await deleteBookingConflicts(booking.roomId, booking.startTime, booking.endTime, booking.id,)
+    router.refresh();
   }
 
-  if (!booking) return null
-
+  if (!booking) return null;
+  const showWarning = booking;
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-card text-card-foreground">
@@ -39,7 +73,15 @@ export default function BookingReviewDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-
+          {/* Warning Label */}
+          {hasConflict && !isCheckingConflict && (
+            <div className="flex items-center gap-2 p-3 text-sm rounded-md bg-destructive/15 text-destructive border border-destructive/20">
+              <AlertTriangle className="w-15 h-15" />
+              <p>
+                <strong>Warning:</strong> This time slot conflicts with other pending booking(s). Approving this booking will remove all conflicting pending bookings.
+              </p>
+            </div>
+          )}
           {/* User Info */}
           <div>
             <h3 className="font-semibold">User</h3>
@@ -50,7 +92,9 @@ export default function BookingReviewDialog({
           {/* Room Info */}
           <div>
             <h3 className="font-semibold">Room</h3>
-            <p>{booking.room.building} Room {booking.room.number}</p>
+            <p>
+              {booking.room.building} Room {booking.room.number}
+            </p>
             <p>Capacity: {booking.room.capacity}</p>
             <p>{booking.room.description}</p>
           </div>
@@ -101,9 +145,8 @@ export default function BookingReviewDialog({
           >
             Confirm Decision
           </Button>
-
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
