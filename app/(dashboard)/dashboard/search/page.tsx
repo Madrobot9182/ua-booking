@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 // We import the client-side pop-up button here
 import BookRoomDialog from "./BookRoomDialog";
 import BookingSearchBar from "@/components/dashboard/booking-search-bar";
+import { getRooms } from "@/lib/room-server-action";
 
 export default async function RoomList({
   searchParams,
@@ -23,6 +24,8 @@ export default async function RoomList({
     // Format it to local time zone
     return dateObj.toLocaleTimeString();
   }
+  const initialRooms = await getRooms();
+
   //get user ID
   const session = await auth.getSession();
   const userId = session.data!.user.id;
@@ -55,11 +58,10 @@ export default async function RoomList({
   });
 
   const busyRoomIds = conflictingBookings.map((booking) => booking.roomId); //get only the IDs
-  console.log(capacity_num)
   const data = await prisma.room.findMany({
     where: {
       ...(capacity_num !== undefined && { capacity: { gte: capacity_num } }),
-      ...(building && { building }),
+      ...(building && building !== "ALL" && { building }), // only include if not "ALL"
       ...(startTime && { openTime: { lte: startTime } }),
       ...(endTime && { closeTime: { gte: endTime } }),
       ...(busyRoomIds.length > 0 && { id: { notIn: busyRoomIds } }),
@@ -69,9 +71,9 @@ export default async function RoomList({
   // console.log(convertTime(data[0].openTime))
 
   return (
-    <div className="container mx-auto p-6 max-w-4xl">
+    <div className="container mx-auto p-6 max-w-7xl">
       <div className="mb-4">
-        <BookingSearchBar />
+        <BookingSearchBar initialRooms={initialRooms}/>
       </div>
 
       <div className="mb-6 flex justify-between items-end">

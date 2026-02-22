@@ -16,7 +16,15 @@ import { Badge } from "@/components/ui/badge";
 import { Search, Sparkles, Loader2 } from "lucide-react";
 import { redirect } from "next/navigation";
 import { handleSearchRedirect } from "@/components/dashboard/search-actions";
-export default function BookingSearchBar() {
+import { Room } from "@/app/generated/prisma/client";
+
+interface BookingSearchBarProp {
+  initialRooms: Room[];
+}
+
+export default function BookingSearchBar({
+  initialRooms,
+}: BookingSearchBarProp)  {
   const [start, setStart] = React.useState<Date | undefined>();
   const [end, setEnd] = React.useState<Date | undefined>();
   const [building, setBuilding] = React.useState("");
@@ -24,14 +32,15 @@ export default function BookingSearchBar() {
   const [aiQuery, setAiQuery] = React.useState("");
   const [aiExpanded, setAiExpanded] = React.useState(false);
   const [aiLoading, setAiLoading] = React.useState(false);
-  
+  const buildings = ["ALL", ...Array.from(new Set(initialRooms.map(r => r.building)))];
+
   const executeSearch = () => {
     const searchData: Record<string, string> = {};
 
     //Only add values if they exist
     if (building) searchData.building = building;
     if (capacity) searchData.capacity = capacity;
-    console.log("Capacity is: ", capacity, searchData);
+
     // Convert Dates to ISO strings (or your preferred format)
     if (start) searchData.start = start.toISOString();
     if (end) searchData.end = end.toISOString();
@@ -140,23 +149,23 @@ export default function BookingSearchBar() {
               <SelectValue placeholder="Building" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ECHA">ECHA</SelectItem>
-              <SelectItem value="CCIS">CCIS</SelectItem>
-              <SelectItem value="krha">KRHA</SelectItem>
+              {buildings.map(b => (
+                <SelectItem key={b} value={b}>
+                  {b}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
 
-          <Select onValueChange={setCapacity}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Capacity" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="5">5+</SelectItem>
-              <SelectItem value="10">10+</SelectItem>
-              <SelectItem value="20">20+</SelectItem>
-              <SelectItem value="50">50+</SelectItem>
-            </SelectContent>
-          </Select>
+            <Input
+              className="max-w-24"
+              type="number"
+              min={1}
+              step={1}
+              placeholder="Capacity"
+              value={capacity || ""} // controlled input
+              onChange={(e) => setCapacity(e.target.value)}
+            />
 
           <DateTimePicker
             value={start}
