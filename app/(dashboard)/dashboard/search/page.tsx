@@ -33,15 +33,11 @@ export default async function RoomList({
   const params = await searchParams;
   const capacity = params.capacity;
   const building = params.building;
-  var startTime;
-  var endTime;
   
-  if (params.start) {
-    startTime = new Date(params.start);
-  }
-  if (params.end) {
-    endTime = new Date(params.end);
-  }
+  const startTime = params?.start ? new Date(params.start) : undefined;
+  const endTime = params?.end ? new Date(params.end) : undefined;
+
+  
 
   var capacity_num;
   if (capacity) {
@@ -72,7 +68,7 @@ export default async function RoomList({
   return (
     <div className="container mx-auto p-6 max-w-7xl">
       <div className="mb-4">
-        <BookingSearchBar initialRooms={initialRooms}/>
+        <BookingSearchBar initialRooms={initialRooms} />
       </div>
 
       <div className="mb-6 flex justify-between items-end">
@@ -138,7 +134,12 @@ export default async function RoomList({
             {/* Right Section: The Modal Button */}
             <div className="p-6 pt-0 sm:pt-6 border-t sm:border-t-0 sm:border-l flex items-center justify-center w-full sm:w-40 bg-muted/10 sm:h-full">
               {/* This replaces the button and handles all the client-side pop-up logic */}
-              <BookRoomDialog room={room} userId={userId} />
+              <BookRoomDialog
+                room={room}
+                userId={userId}
+                defaultStartTime={startTime}
+                defaultEndTime={endTime}
+              />
             </div>
           </Card>
         ))}
