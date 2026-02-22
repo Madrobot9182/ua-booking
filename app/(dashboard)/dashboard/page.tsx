@@ -1,23 +1,15 @@
 import { auth } from "@/lib/auth/server";
-import { prisma } from "@/lib/prisma";
 import Navbar from "@/components/dashboard/nav-bar";
 import BookingSearchBar from "@/components/dashboard/booking-search-bar";
 import BookingList from "@/components/dashboard/booking-list";
 import AdminCalendar from "@/components/Admin-Calendar";
-import { getRooms } from "@/lib/room-server-action";
+import { getBookingRequest, getRooms } from "@/lib/room-server-action";
 
 export default async function DashboardPage() {
   const session = await auth.getSession();
-  // if (!session?.data?.session) {
-  //   // redirect to login page if not logged in
-  //   redirect("/auth/login");
-  // }
+
   const initialRooms = await getRooms()
-  const bookings = await prisma.bookingRequest.findMany({
-    where: { userId: session.data?.user.id },
-    include: { room: true, user: true },
-    orderBy: { startTime: "asc" },
-  });
+  const bookings = await getBookingRequest(session.data!.user.id)
 
   return (
     <div className="min-h-screen">

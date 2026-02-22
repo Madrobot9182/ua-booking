@@ -30,8 +30,14 @@ function timeStringToDate(time: string): Date {
 function serializeRoom(room: any) {
   return {
     ...room,
-    openTime: room.openTime instanceof Date ? room.openTime.toISOString().slice(11,16) : room.openTime,
-    closeTime: room.closeTime instanceof Date ? room.closeTime.toISOString().slice(11,16) : room.closeTime,
+    openTime:
+      room.openTime instanceof Date
+        ? room.openTime.toISOString().slice(11, 16)
+        : room.openTime,
+    closeTime:
+      room.closeTime instanceof Date
+        ? room.closeTime.toISOString().slice(11, 16)
+        : room.closeTime,
     createdAt: room.createdAt?.toISOString?.() ?? room.createdAt,
     updatedAt: room.updatedAt?.toISOString?.() ?? room.updatedAt,
   };
@@ -53,7 +59,13 @@ export async function createRoomAction(data: RoomInput) {
         organizationId: data.organizationId,
         openTime: timeStringToDate(data.openTime),
         closeTime: timeStringToDate(data.closeTime),
-        availableOn: data.availableOn ?? ["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY"],
+        availableOn: data.availableOn ?? [
+          "MONDAY",
+          "TUESDAY",
+          "WEDNESDAY",
+          "THURSDAY",
+          "FRIDAY",
+        ],
       },
     });
     return serializeRoom(room);
@@ -80,7 +92,13 @@ export async function updateRoomAction(id: string, data: RoomInput) {
         organizationId: data.organizationId,
         openTime: timeStringToDate(data.openTime),
         closeTime: timeStringToDate(data.closeTime),
-        availableOn: data.availableOn ?? ["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY"],
+        availableOn: data.availableOn ?? [
+          "MONDAY",
+          "TUESDAY",
+          "WEDNESDAY",
+          "THURSDAY",
+          "FRIDAY",
+        ],
       },
     });
     return serializeRoom(room);
@@ -96,6 +114,19 @@ export async function deleteRoomAction(id: string) {
     return await prisma.room.delete({ where: { id } });
   } catch (err) {
     console.error("Failed to delete room:", err);
+    throw err;
+  }
+}
+// -------- GET BOOKING REQUEST --------
+export async function getBookingRequest(userId: string) {
+  try {
+    return await prisma.bookingRequest.findMany({
+      where: { userId: userId },
+      include: { room: true, user: true },
+      orderBy: { startTime: "asc" },
+    });
+  } catch (err) {
+    console.error("Failed to get Booking Request:", err);
     throw err;
   }
 }

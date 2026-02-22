@@ -20,9 +20,7 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
-
-import { createBooking } from "../../../../lib/booker-server-actions"; // Import your server action
-import { confirmBooking } from "@/lib/mailer-server-actions";
+import { createBooking } from "@/lib/booker-server-actions";
 
 // Accept the room data passed down from the server component
 export default function BookRoomDialog({ room, userId }: { room: any, userId: any }) {

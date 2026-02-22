@@ -35,6 +35,7 @@ export default async function RoomList({
   const building = params.building;
   var startTime;
   var endTime;
+  
   if (params.start) {
     startTime = new Date(params.start);
   }
@@ -67,8 +68,6 @@ export default async function RoomList({
       ...(busyRoomIds.length > 0 && { id: { notIn: busyRoomIds } }),
     },
   });
-
-  // console.log(convertTime(data[0].openTime))
 
   return (
     <div className="container mx-auto p-6 max-w-7xl">

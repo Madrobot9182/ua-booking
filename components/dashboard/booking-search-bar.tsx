@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Search, Sparkles, Loader2 } from "lucide-react";
 import { redirect } from "next/navigation";
-import { handleSearchRedirect } from "@/components/dashboard/search-actions";
+import { handleSearchRedirect } from "@/lib/search-actions";
 import { Room } from "@/app/generated/prisma/client";
 
 interface BookingSearchBarProp {
@@ -158,7 +158,7 @@ export default function BookingSearchBar({
           </Select>
 
             <Input
-              className="max-w-24"
+              className="max-w-28"
               type="number"
               min={1}
               step={1}
