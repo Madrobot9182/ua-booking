@@ -2,6 +2,7 @@
 
 import { WeekDay } from "@/app/generated/prisma/enums";
 import { prisma } from "./prisma";
+import { RoomFormData } from "@/components/dashboard/room-model";
 
 export interface RoomInput {
   number: string;
@@ -16,6 +17,7 @@ export interface RoomInput {
   closeTime: string; // HH:MM
   isActive?: boolean;
   availableOn?: WeekDay[];
+  resourceIds?: string[];
 }
 
 // Convert "HH:MM" string to Date object for Prisma @db.Time
@@ -38,74 +40,76 @@ function serializeRoom(room: any) {
       room.closeTime instanceof Date
         ? room.closeTime.toISOString().slice(11, 16)
         : room.closeTime,
-    createdAt: room.createdAt?.toISOString?.() ?? room.createdAt,
-    updatedAt: room.updatedAt?.toISOString?.() ?? room.updatedAt,
+    resources:
+      room.resources?.map((r: any) => ({
+        id: r.resource.id,
+        name: r.resource.name,
+      })) ?? [],
   };
 }
 
 // -------- CREATE ROOM --------
-export async function createRoomAction(data: RoomInput) {
-  try {
-    const room = await prisma.room.create({
-      data: {
-        building: data.building,
-        number: data.number,
-        floor: data.floor ?? null,
-        capacity: data.capacity,
-        description: data.description ?? null,
-        visible: data.visible,
-        reqApproval: data.reqApproval,
-        isActive: true,
-        organizationId: data.organizationId,
-        openTime: timeStringToDate(data.openTime),
-        closeTime: timeStringToDate(data.closeTime),
-        availableOn: data.availableOn ?? [
-          "MONDAY",
-          "TUESDAY",
-          "WEDNESDAY",
-          "THURSDAY",
-          "FRIDAY",
-        ],
+export async function createRoomAction(data: RoomFormData) {
+  return await prisma.room.create({
+    data: {
+      number: data.number,
+      building: data.building,
+      floor: data.floor,
+      capacity: data.capacity,
+      description: data.description,
+      visible: data.visible,
+      reqApproval: data.reqApproval,
+      organizationId: data.organizationId,
+      isActive: data.isActive ?? true,
+      availableOn: data.availableOn ?? [],
+      openTime: new Date(`1970-01-01T${data.openTime}:00`),
+      closeTime: new Date(`1970-01-01T${data.closeTime}:00`),
+
+      // 🔥 THIS IS THE IMPORTANT PART
+      resources: {
+        create: data.resourceIds.map((id: string) => ({
+          resource: {
+            connect: { id },
+          },
+        })),
       },
-    });
-    return serializeRoom(room);
-  } catch (err) {
-    console.error("Failed to create room:", err);
-    throw err;
-  }
+    },
+  });
 }
 
 // -------- UPDATE ROOM --------
-export async function updateRoomAction(id: string, data: RoomInput) {
-  try {
-    const room = await prisma.room.update({
-      where: { id },
-      data: {
-        building: data.building,
-        number: data.number,
-        floor: data.floor ?? null,
-        capacity: data.capacity,
-        description: data.description ?? null,
-        visible: data.visible,
-        reqApproval: data.reqApproval,
-        isActive: data.isActive ?? true,
-        organizationId: data.organizationId,
-        openTime: timeStringToDate(data.openTime),
-        closeTime: timeStringToDate(data.closeTime),
-        availableOn: data.availableOn ?? [
-          "MONDAY",
-          "TUESDAY",
-          "WEDNESDAY",
-          "THURSDAY",
-          "FRIDAY",
-        ],
+export async function updateRoomAction(
+  roomId: string,
+  data: RoomFormData
+) {
+  return await prisma.room.update({
+    where: { id: roomId },
+    data: {
+      number: data.number,
+      building: data.building,
+      floor: data.floor,
+      capacity: data.capacity,
+      description: data.description,
+      visible: data.visible,
+      reqApproval: data.reqApproval,
+      organizationId: data.organizationId,
+      isActive: data.isActive ?? true,
+      availableOn: data.availableOn ?? [],
+      openTime: new Date(`1970-01-01T${data.openTime}:00`),
+      closeTime: new Date(`1970-01-01T${data.closeTime}:00`),
+
+      // 🔥 RESET RELATION
+      resources: {
+        deleteMany: {},
+
+        create: data.resourceIds.map((id: string) => ({
+          resource: {
+            connect: { id },
+          },
+        })),
       },
-    });
-    return serializeRoom(room);
-  } catch (err) {
-    console.error("Update room failed:", err);
-    throw err;
-  }
+    },
+  });
 }
 
 // -------- DELETE ROOM --------
@@ -143,7 +147,16 @@ export async function deleteBookingRequest(id: string) {
 
 // -------- GET ROOMS --------
 export async function getRooms() {
-  return prisma.room.findMany({ orderBy: { building: "asc" } });
+  return await prisma.room.findMany({
+    include: {
+      resources: {
+        include: {
+          resource: true,
+        },
+      },
+    },
+    orderBy: { building: "asc" },
+  });
 }
 
 // -------- GET ORGANIZATIONS --------
@@ -162,4 +175,28 @@ export async function getCurrentUserOrganization(userId: string) {
     //   members: { select: { id: true, email: true, role: true } },
     // },
   });
+}
+
+// ---GET RESOURCES
+export async function getAllResources() {
+  const resources = await prisma.resource.findMany({
+    orderBy: { name: "asc" },
+  });
+  return resources;
+}
+
+// ----- CREATE RESOURCES -----
+export async function createResourceAction(name: string) {
+  try {
+    const resource = await prisma.resource.upsert({
+      where: { name },
+      update: {},
+      create: { name },
+    });
+
+    return resource;
+  } catch (err) {
+    console.error("Failed to create resource:", err);
+    throw err;
+  }
 }

@@ -7,17 +7,19 @@ import { getBookingRequest, getRooms } from "@/lib/room-server-action";
 
 export default async function DashboardPage() {
   const session = await auth.getSession();
-  if (!session) return null;
-  
-  const initialRooms = await getRooms()
-  const bookings = await getBookingRequest(session.data!.user.id)
+  if (!session) {
+    return null;
+  }
+
+  const initialRooms = await getRooms();
+  const bookings = await getBookingRequest(session.data!.user.id);
 
   return (
     <div className="min-h-screen">
       <Navbar />
 
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
-        <BookingSearchBar initialRooms={initialRooms}/>
+        <BookingSearchBar initialRooms={initialRooms} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-1 rounded-2xl border bg-card p-6 shadow-sm">

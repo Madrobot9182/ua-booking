@@ -19,18 +19,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { createRoomAction, updateRoomAction } from "@/lib/room-server-action";
+import {
+  createResourceAction,
+  createRoomAction,
+  updateRoomAction,
+} from "@/lib/room-server-action";
 import { Textarea } from "../ui/textarea";
 import { Label } from "../ui/label";
+import { Resource } from "@/app/generated/prisma/client";
+import { Plus } from "lucide-react";
+import { Badge } from "../ui/badge";
 
 interface RoomModalProps {
-  room: Room | null;
+  room:
+    | (Room & {
+        resources?: { resource: Resource }[];
+      })
+    | null;
   onClose: () => void;
   refreshRooms: () => void;
   organizations: Organization[];
+  resources: Resource[]; // 👈 add this
 }
 
-interface RoomFormData {
+export interface RoomFormData {
   number: string;
   building: string;
   floor?: number | null;
@@ -43,6 +55,7 @@ interface RoomFormData {
   closeTime: string; // HH:MM
   isActive?: boolean;
   availableOn?: WeekDay[];
+  resourceIds: string[]; // 👈 add this
 }
 
 export default function RoomModal({
@@ -50,6 +63,7 @@ export default function RoomModal({
   onClose,
   refreshRooms,
   organizations,
+  resources,
 }: RoomModalProps) {
   const [form, setForm] = useState<RoomFormData>({
     number: "",
@@ -63,7 +77,8 @@ export default function RoomModal({
     openTime: "",
     closeTime: "",
     isActive: true,
-    availableOn: ["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY"],
+    availableOn: ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"],
+    resourceIds: [""],
   });
 
   // Populate form when editing
@@ -78,13 +93,44 @@ export default function RoomModal({
         visible: room.visible,
         reqApproval: room.reqApproval,
         organizationId: room.organizationId,
-        openTime: new Date(room.openTime).toISOString().slice(11,16),
-        closeTime: new Date(room.closeTime).toISOString().slice(11,16),
+        openTime: new Date(room.openTime).toISOString().slice(11, 16),
+        closeTime: new Date(room.closeTime).toISOString().slice(11, 16),
         isActive: room.isActive,
         availableOn: room.availableOn,
+        resourceIds: room.resources?.map((r) => r.resource.id) ?? [],
       });
     }
   }, [room]);
+
+  const [availableResources, setAvailableResources] = useState(resources);
+  const [isAddingResource, setIsAddingResource] = useState(false);
+  const [newResourceName, setNewResourceName] = useState("");
+
+  async function toggleResource(id: string) {
+    setForm((prev) => ({
+      ...prev,
+      resourceIds: prev.resourceIds.includes(id)
+        ? prev.resourceIds.filter((r) => r !== id)
+        : [...prev.resourceIds, id],
+    }));
+  }
+
+  async function handleAddResource() {
+    if (!newResourceName.trim()) return;
+
+    try {
+      const newRes = await createResourceAction(newResourceName);
+      setAvailableResources((prev) => [...prev, newRes]);
+      setForm((prev) => ({
+        ...prev,
+        resourceIds: [...prev.resourceIds, newRes.id],
+      }));
+      setNewResourceName("");
+      setIsAddingResource(false);
+    } catch (err) {
+      console.error("Failed to create resource", err);
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,14 +179,18 @@ export default function RoomModal({
           <Input
             type="number"
             value={form.floor ?? 0}
-            onChange={(e) => setForm({ ...form, floor: Number(e.target.value) })}
+            onChange={(e) =>
+              setForm({ ...form, floor: Number(e.target.value) })
+            }
           />
 
           <Label>Capacity</Label>
           <Input
             type="number"
             value={form.capacity}
-            onChange={(e) => setForm({ ...form, capacity: Number(e.target.value) })}
+            onChange={(e) =>
+              setForm({ ...form, capacity: Number(e.target.value) })
+            }
           />
 
           <Label>Open Time</Label>
@@ -163,9 +213,58 @@ export default function RoomModal({
             onChange={(e) => setForm({ ...form, description: e.target.value })}
           />
 
+          <Label className="mb-2 block">Resources</Label>
+
+          <div className="flex flex-wrap gap-2">
+            {availableResources.map((res: Resource) => {
+              const selected = form.resourceIds.includes(res.id);
+
+              return (
+                <Badge
+                  key={res.id}
+                  variant={selected ? "default" : "secondary"}
+                  className="cursor-pointer px-3 py-1 text-sm"
+                  onClick={() => toggleResource(res.id)}
+                >
+                  {res.name}
+                </Badge>
+              );
+            })}
+
+            {/* Add Button */}
+            {!isAddingResource && (
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => setIsAddingResource(true)}
+                className="rounded-full"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+
+          {/* Inline Add Input */}
+          {isAddingResource && (
+            <div className="flex gap-2 mt-3">
+              <Input
+                placeholder="New resource..."
+                value={newResourceName}
+                onChange={(e) => setNewResourceName(e.target.value)}
+                autoFocus
+              />
+              <Button type="button" size="sm" onClick={handleAddResource}>
+                Add
+              </Button>
+            </div>
+          )}
+
           <Select
             value={form.organizationId}
-            onValueChange={(value) => setForm({ ...form, organizationId: value })}
+            onValueChange={(value) =>
+              setForm({ ...form, organizationId: value })
+            }
           >
             <SelectTrigger>
               <SelectValue placeholder="Select Organization" />
@@ -182,7 +281,9 @@ export default function RoomModal({
           <label className="flex items-center gap-2">
             <Checkbox
               checked={form.visible}
-              onCheckedChange={(checked) => setForm({ ...form, visible: checked as boolean })}
+              onCheckedChange={(checked) =>
+                setForm({ ...form, visible: checked as boolean })
+              }
             />
             <span>Visible to Users</span>
           </label>
@@ -190,13 +291,17 @@ export default function RoomModal({
           <label className="flex items-center gap-2">
             <Checkbox
               checked={form.reqApproval}
-              onCheckedChange={(checked) => setForm({ ...form, reqApproval: checked as boolean })}
+              onCheckedChange={(checked) =>
+                setForm({ ...form, reqApproval: checked as boolean })
+              }
             />
             <span>Requires Approval</span>
           </label>
 
           <DialogFooter className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
             <Button type="submit">{room ? "Save" : "Create"}</Button>
           </DialogFooter>
         </form>

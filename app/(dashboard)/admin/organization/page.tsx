@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth/server";
 import OrganizationView from "./organization-view";
-import { getCurrentUserOrganization, getRooms } from "@/lib/room-server-action";
+import { getAllResources, getCurrentUserOrganization, getRooms } from "@/lib/room-server-action";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +10,7 @@ export default async function OrganizationPage() {
 
   const rooms = await getRooms(); 
   const organizations = await getCurrentUserOrganization(session.data!.user.id);
-
-
-  return <OrganizationView initialRooms={rooms} organizations={organizations!} />;
+  const resources = await getAllResources();
+  
+  return <OrganizationView initialRooms={rooms} organizations={organizations!} resources={resources}/>;
 }

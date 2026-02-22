@@ -65,7 +65,7 @@ export default async function RoomList({
   const data = await prisma.room.findMany({
     where: {
       ...(capacity_num !== undefined && { capacity: { gte: capacity_num } }),
-      ...(building && building !== "ALL" && { building }), // only include if not "ALL"
+      ...(building && building !== "ALL" && { building }),
       ...(startTime && { openTime: { lte: startTime } }),
       ...(endTime && { closeTime: { gte: endTime } }),
       ...(busyRoomIds.length > 0 && { id: { notIn: busyRoomIds } }),
@@ -79,6 +79,15 @@ export default async function RoomList({
             },
           },
         }),
+    },
+
+    // 🔥 ADD THIS
+    include: {
+      resources: {
+        include: {
+          resource: true,
+        },
+      },
     },
   });
 
@@ -166,6 +175,21 @@ export default async function RoomList({
                     String(convertTime(room.closeTime))}
                 </div>
               </div>
+
+              {/* Resource Tags */}
+              {room.resources?.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-4">
+                  {room.resources.map((r) => (
+                    <Badge
+                      key={r.resource.id}
+                      variant="secondary"
+                      className="text-xs px-2 py-1"
+                    >
+                      {r.resource.name}
+                    </Badge>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Right Section: The Modal Button */}
