@@ -17,6 +17,7 @@ import { Search, Sparkles, Loader2 } from "lucide-react";
 import { redirect } from "next/navigation";
 import { handleSearchRedirect } from "@/lib/search-actions";
 import { Room } from "@/app/generated/prisma/client";
+import { aiSearchRooms, searchRoomsWithNLP } from "@/lib/AI-IS-EPIC";
 
 interface BookingSearchBarProp {
   initialRooms: Room[];
@@ -24,7 +25,7 @@ interface BookingSearchBarProp {
 
 export default function BookingSearchBar({
   initialRooms,
-}: BookingSearchBarProp)  {
+}: BookingSearchBarProp) {
   const [start, setStart] = React.useState<Date | undefined>();
   const [end, setEnd] = React.useState<Date | undefined>();
   const [building, setBuilding] = React.useState("");
@@ -32,7 +33,10 @@ export default function BookingSearchBar({
   const [aiQuery, setAiQuery] = React.useState("");
   const [aiExpanded, setAiExpanded] = React.useState(false);
   const [aiLoading, setAiLoading] = React.useState(false);
-  const buildings = ["ALL", ...Array.from(new Set(initialRooms.map(r => r.building)))];
+  const buildings = [
+    "ALL",
+    ...Array.from(new Set(initialRooms.map((r) => r.building))),
+  ];
 
   const executeSearch = () => {
     const searchData: Record<string, string> = {};
@@ -76,11 +80,12 @@ export default function BookingSearchBar({
   async function handleAiSubmit() {
     if (!aiQuery) return;
     setAiLoading(true);
-
-    // Placeholder for AI processing
-    await new Promise((res) => setTimeout(res, 1500));
-
-    setAiLoading(false);
+    try {
+      const rooms = await aiSearchRooms(aiQuery); // runs server-side
+      console.log(rooms);
+    } finally {
+      setAiLoading(false);
+    }
   }
 
   const suggestions = [
@@ -149,7 +154,7 @@ export default function BookingSearchBar({
               <SelectValue placeholder="Building" />
             </SelectTrigger>
             <SelectContent>
-              {buildings.map(b => (
+              {buildings.map((b) => (
                 <SelectItem key={b} value={b}>
                   {b}
                 </SelectItem>
@@ -157,15 +162,15 @@ export default function BookingSearchBar({
             </SelectContent>
           </Select>
 
-            <Input
-              className="max-w-28"
-              type="number"
-              min={1}
-              step={1}
-              placeholder="Capacity"
-              value={capacity || ""} // controlled input
-              onChange={(e) => setCapacity(e.target.value)}
-            />
+          <Input
+            className="max-w-28"
+            type="number"
+            min={1}
+            step={1}
+            placeholder="Capacity"
+            value={capacity || ""} // controlled input
+            onChange={(e) => setCapacity(e.target.value)}
+          />
 
           <DateTimePicker
             value={start}
@@ -195,7 +200,10 @@ export default function BookingSearchBar({
               key={s}
               variant="outline"
               size="sm"
-              onClick={() => setAiQuery(s)}
+              onClick={() => {
+                setAiQuery(s);
+                handleAiSubmit();
+              }}
               className="text-xs"
             >
               {s}
