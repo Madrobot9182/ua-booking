@@ -16,13 +16,15 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog"
 import { ColorPicker } from "@/components/form/color-picker"
+import { deleteBookingRequest } from "@/lib/room-server-action"
 
 export default function CalendarViewEventDialog() {
   const { manageEventDialogOpen, setManageEventDialogOpen, selectedEvent, setSelectedEvent, events, setEvents } =
     useCalendarContext()
 
-  function handleCancelRequest() {
+  async function handleCancelRequest() {
     if (!selectedEvent) return
+    await deleteBookingRequest(selectedEvent.id)
     setEvents(events.filter((event) => event.id !== selectedEvent.id))
     handleClose()
   }
