@@ -1,7 +1,8 @@
 import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
 
-export const hours = Array.from({ length: 24 }, (_, i) => i)
+export const START_HOUR = 8
+export const hours = Array.from({ length: 24 }, (_, i) => (i + START_HOUR) % 24)
 
 export default function CalendarBodyMarginDayMargin({
   className,
