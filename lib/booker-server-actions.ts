@@ -7,21 +7,22 @@ export async function createBooking(bookingData: any) {
   try {
     const newBooking = await prisma.bookingRequest.create({
       data: {
-        id: bookingData.id,
         roomId: bookingData.roomId,
         userId: bookingData.userId,
         startTime: bookingData.startTime,
         endTime: bookingData.endTime,
-        status: bookingData.status,
+        status: bookingData.status ?? "PENDING",
         description: bookingData.description,
       },
     });
 
-    await confirmBooking(bookingData.id);
+    console.log("Booking created with id:", newBooking.id);
+
+    await confirmBooking(newBooking.id);
+
     return { success: true, booking: newBooking };
-  } 
-  catch (e) {
-    alert(e);
+  } catch (e) {
+    console.error("Failed to create booking:", e);
     return { success: false };
   }
 }

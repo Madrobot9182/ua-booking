@@ -100,6 +100,16 @@ export async function deleteRoomAction(id: string) {
   }
 }
 
+// -------- DELETE BOOKING REQUEST --------
+export async function deleteBookingRequest(id: string) {
+  try {
+    return await prisma.bookingRequest.delete({ where: { id } });
+  } catch (err) {
+    console.error("Failed to delete booking request:", err);
+    throw err;
+  }
+}
+
 // -------- GET ROOMS --------
 export async function getRooms() {
   return prisma.room.findMany({ orderBy: { building: "asc" } });
