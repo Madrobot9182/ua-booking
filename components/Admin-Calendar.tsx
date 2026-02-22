@@ -11,6 +11,7 @@ interface AdminCalendarProps {
 }
 
 export default function AdminCalendar({ bookings }: AdminCalendarProps) {
+  // const [events, setEvents] = useState<CalendarEvent[]>(generateMockEvents())
   const [events, setEvents] = useState(mapBookingsToEvents(bookings))
   const [mode, setMode] = useState<Mode>('week')
   const [date, setDate] = useState<Date>(new Date())

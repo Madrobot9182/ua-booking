@@ -2,9 +2,8 @@ import { auth } from "@/lib/auth/server";
 import { prisma } from "@/lib/prisma";
 import Navbar from "@/components/dashboard/nav-bar";
 import SearchBar from "@/components/dashboard/search-bar";
-import CalendarDemo from "@/components/calendar-demo";
 import BookingList from "@/components/dashboard/booking-list";
-import { redirect } from "next/navigation";
+import AdminCalendar from "@/components/Admin-Calendar";
 
 export default async function DashboardPage() {
   const session = await auth.getSession();
@@ -27,12 +26,11 @@ export default async function DashboardPage() {
         <SearchBar />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 rounded-2xl border bg-card p-6 shadow-sm">
-            <CalendarDemo />
-          </div>
-
           <div className="lg:col-span-1 rounded-2xl border bg-card p-6 shadow-sm">
             <BookingList bookings={bookings} />
+          </div>
+          <div className="lg:col-span-2 rounded-2xl border bg-card p-6 shadow-sm">
+            <AdminCalendar bookings={bookings} />
           </div>
         </div>
       </div>
