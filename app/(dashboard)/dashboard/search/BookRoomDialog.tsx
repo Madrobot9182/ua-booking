@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dialog";
 
 import { createBooking } from "../../../../lib/booker-server-actions"; // Import your server action
+import { confirmBooking } from "@/lib/mailer-server-actions";
 
 // Accept the room data passed down from the server component
 export default function BookRoomDialog({ room, userId }: { room: any, userId: any }) {
@@ -30,24 +31,20 @@ export default function BookRoomDialog({ room, userId }: { room: any, userId: an
   const [endDate, setEndDate] = useState<Date | undefined>(new Date());
   const [endTime, setEndTime] = useState<string>("10:00");
   const [description, setDescription] = useState<string>("")
-  const handleConfirm = async () => {
-    const bookingData = {
 
+  async function handleConfirm () {
+    const bookingData = {
       roomId: (room.id),
       userId: (userId),
       startTime: `${startDate ? format(startDate, "yyyy-MM-dd") : ""}T${startTime}:00-07:00`,
       endTime: `${endDate ? format(endDate, "yyyy-MM-dd") : ""}T${endTime}:00-07:00`,
       description: description
     };
-     
-      
     
     const response = await createBooking(bookingData);
     if (response.success) {
-    alert(`Successfully booked ${room.building} ${room.number}!`);
+      alert(`Successfully booked ${room.building} ${room.number}!`);
     }
-    
-    alert(`Successfully booked ${room.building} ${room.number}!`);
   };
 
   return (

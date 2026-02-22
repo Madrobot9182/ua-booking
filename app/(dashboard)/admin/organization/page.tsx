@@ -1,12 +1,16 @@
-import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth/server";
 import OrganizationView from "./organization-view";
+import { getCurrentUserOrganization, getRooms } from "@/lib/room-server-action";
 
 export const dynamic = "force-dynamic";
 
 export default async function OrganizationPage() {
-  const rooms = await prisma.room.findMany({
-    orderBy: { building: "asc" },
-  });
+  const session = await auth.getSession();
+  if (!session) return null;
 
-  return <OrganizationView initialRooms={rooms} />;
+  const rooms = await getRooms(); 
+  const organizations = await getCurrentUserOrganization(session.data!.user.id);
+
+
+  return <OrganizationView initialRooms={rooms} organizations={organizations!} />;
 }

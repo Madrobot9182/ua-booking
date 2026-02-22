@@ -3,6 +3,7 @@ import { useCalendarContext } from '@/components/calendar/calendar-context'
 import { format, isSameDay, isSameMonth } from 'date-fns'
 import { cn } from '@/lib/utils'
 import { motion, MotionConfig, AnimatePresence } from 'framer-motion'
+import { START_HOUR } from './body/day/calendar-body-margin-day-margin'
 
 interface EventPosition {
   left: string
@@ -48,7 +49,7 @@ function calculateEventPosition(
     endMinutes = 59
   }
 
-  const topPosition = startHour * 128 + (startMinutes / 60) * 128
+  const topPosition = (startHour - START_HOUR) * 128 + (startMinutes / 60) * 128
   const duration = endHour * 60 + endMinutes - (startHour * 60 + startMinutes)
   const height = (duration / 60) * 128
 

@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { useEffect, useRef } from "react";
 import LoginButton from "@/components/login-button";
@@ -33,7 +33,7 @@ export default function UABookingSplashPage() {
           shape.radius * 0.1,
           shape.x,
           shape.y,
-          shape.radius
+          shape.radius,
         );
         grad.addColorStop(0, "rgba(0, 77, 64, 0.4)"); // dark green
         grad.addColorStop(0.5, "rgba(255, 223, 0, 0.2)"); // soft gold
@@ -46,7 +46,7 @@ export default function UABookingSplashPage() {
           shape.y + Math.cos(shape.angle) * 10,
           shape.radius,
           0,
-          Math.PI * 2
+          Math.PI * 2,
         );
         ctx.fill();
 
@@ -92,7 +92,7 @@ export default function UABookingSplashPage() {
 
           {/* Login button overlay */}
           <div className="mt-8">
-            <LoginButton label="Try it out now!"/>
+            <LoginButton label="Try it out now!" />
           </div>
         </div>
       </section>
@@ -101,14 +101,12 @@ export default function UABookingSplashPage() {
       <section className="max-w-6xl mx-auto px-6 py-24 grid md:grid-cols-2 gap-12 items-center">
         <div className="space-y-6">
           <h1 className="text-4xl md:text-5xl font-bold leading-tight">
-            One Unified Platform for
-            <span className="block text-primary">
-              Classroom & Study Room Booking
-            </span>
+            A Unified Room Booking Platform That Just Works!
           </h1>
 
           <p className="text-lg text-muted-foreground">
-            UA-Booking replaces fragmented classroom, study room, and seminar booking systems with one clean, centralized, and modern experience.
+            UA-Booking replaces fragmented classroom, study room, and seminar
+            booking systems with one clean, centralized, and modern experience.
           </p>
         </div>
       </section>
@@ -117,7 +115,23 @@ export default function UABookingSplashPage() {
         <div className="max-w-4xl mx-auto px-6 text-center space-y-8">
           <h2 className="text-3xl font-bold">Why Does This Exist?</h2>
           <p className="text-muted-foreground text-lg">
-            Booking a room shouldn’t require navigating multiple outdated websites. UA-Booking streamlines scheduling into a single, intuitive platform — reducing confusion, improving transparency, and saving time for everyone.
+            More often or not, my university would double, or even triple, book
+            the same room among multiple clubs. Everyone claims they got
+            permission from the university, yet the system fails them again and
+            again. Fragmented systems across multiple buildings, some still even
+            using email and spreadsheets!
+          </p>
+          <p className="text-muted-foreground text-lg">
+            These aren't harmless mistakes either. Clubs and organizations could
+            spend weeks of planning only to end up playing negotiator and
+            frustrating lose an entire day. We believe that there needs to be a
+            better solution that both students and organizers deserve!
+          </p>
+          <p className="text-muted-foreground text-lg">
+            Booking a room shouldn’t require navigating multiple outdated
+            websites. UA-Booking streamlines scheduling into a single, intuitive
+            platform — reducing confusion, improving transparency, and saving
+            time for everyone.
           </p>
         </div>
       </section>
@@ -126,7 +140,10 @@ export default function UABookingSplashPage() {
         <div className="max-w-4xl mx-auto px-6 space-y-8 text-center">
           <h2 className="text-3xl font-bold">About This Project</h2>
           <p className="text-muted-foreground text-lg">
-            UA-Booking was built to modernize campus infrastructure with a consistent UI, reliable booking logic, and scalable architecture using Next.js, TypeScript, and shadcn/ui.
+            UA-Booking was built to modernize campus infrastructure with a
+            consistent UI, reliable booking logic, and scalable architecture
+            using Next.js and shadcn/ui. We are hosted on Neon, and can easily
+            divest into any Postgres server.
           </p>
 
           <div className="space-y-4">
@@ -135,7 +152,7 @@ export default function UABookingSplashPage() {
               <li>• Clean, accessible design</li>
               <li>• Reliable conflict-free scheduling</li>
               <li>• Maintainable and scalable architecture</li>
-              <li>• A consistent design system using shadcn/ui</li>
+              <li>• Email updates. Clear communication. </li>
             </ul>
           </div>
         </div>

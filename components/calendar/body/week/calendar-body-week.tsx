@@ -10,7 +10,7 @@ export default function CalendarBodyWeek() {
 
   return (
     <div className="flex divide-x flex-grow overflow-hidden">
-      <div className="flex flex-col flex-grow divide-y overflow-hidden">
+      <div className="flex flex-col flex-grow divide-y overflow-hidden h-[80vh]">
         <div className="flex flex-col flex-1 overflow-y-auto">
           <div className="relative flex flex-1 divide-x flex-col md:flex-row">
             <CalendarBodyMarginDayMargin className="hidden md:block" />
