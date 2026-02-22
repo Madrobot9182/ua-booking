@@ -26,7 +26,7 @@ export default async function RoomList({
     end?: string;
   }>; // Define the expected "q" parameter
 }) {
-  function convertTime(time: string) {
+  function convertTime(time: Date) {
     const dateObj = new Date(time);
     // Format it to local time zone
     return dateObj.toLocaleTimeString();
@@ -58,11 +58,11 @@ export default async function RoomList({
       endTime: { gt: endTime },
     },
     select: {
-      roomId: true, 
+      roomId: true,
     },
   });
 
-  const busyRoomIds = conflictingBookings.map(booking => booking.roomId); //get only the IDs
+  const busyRoomIds = conflictingBookings.map((booking) => booking.roomId); //get only the IDs
 
   const data = await prisma.room.findMany({
     where: {
@@ -73,11 +73,10 @@ export default async function RoomList({
 
       openTime: { lte: startTime }, // Opens before or exactly at target start
       closeTime: { gte: endTime },
-      id: { 
-        notIn: busyRoomIds 
+      id: {
+        notIn: busyRoomIds,
       }, // Closes after or exactly at target end
     },
-   
   });
 
   // console.log(convertTime(data[0].openTime))
