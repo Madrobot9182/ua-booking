@@ -1,15 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, Clock, ArrowRight } from "lucide-react";
-
 // shadcn components
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
+import { toast } from "sonner";
+
 import {
   Dialog,
   DialogContent,
@@ -22,6 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { createBooking } from "@/lib/booking-server-actions"
 import { Room } from "@/app/generated/prisma/client";
+import { useRouter } from "next/navigation";
 
 interface BookRoomDialog {
   room: Room;
@@ -50,26 +52,64 @@ export default function BookRoomDialog({
   const [endTime, setEndTime] = useState<string>(endTimeString);
   const [description, setDescription] = useState<string>("");
   const [open, setOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const isLocked = useRef(false);
+  const router = useRouter();
 
   async function handleConfirm() {
-    const bookingData = {
-      roomId: room.id,
-      userId: userId,
-      startTime: `${startDate ? format(startDate, "yyyy-MM-dd") : ""}T${startTime}:00-07:00`,
-      endTime: `${endDate ? format(endDate, "yyyy-MM-dd") : ""}T${endTime}:00-07:00`,
-      description: description,
-    };
+    if (isLocked.current) return; // 🚀 hard lock
+    isLocked.current = true;
 
-    const response = await createBooking(bookingData);
-    if (response.success) {
-      setOpen(false);
+    try {
+      setIsSubmitting(true);
+
+      // Error Handling
+      if (!startDate || !endDate) {
+        setError("Please select both start and end dates.");
+        return;
+      }
+
+      const start = new Date(
+        `${format(startDate, "yyyy-MM-dd")}T${startTime}:00`,
+      );
+      const end = new Date(`${format(endDate, "yyyy-MM-dd")}T${endTime}:00`);
+
+      if (end <= start) {
+        setError("End time must be after start time.");
+        return;
+      }
+
+      const bookingData = {
+        roomId: room.id,
+        userId: userId,
+        startTime: `${startDate ? format(startDate, "yyyy-MM-dd") : ""}T${startTime}:00-07:00`,
+        endTime: `${endDate ? format(endDate, "yyyy-MM-dd") : ""}T${endTime}:00-07:00`,
+        description,
+      };
+
+      const response = await createBooking(bookingData);
+
+      if (response.success) {
+        toast.success(`Successfully booked ${room.building} ${room.number}!`);
+        setOpen(false);
+        router.refresh();
+      }
+    } catch (err) {
+      setError("Unexpected error occurred. Please try again.");
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+      isLocked.current = false; // release lock
     }
   }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-        <Button onClick={() => setOpen(true)} className="w-full sm:w-auto">Book Room</Button>
+      <DialogTrigger asChild>
+        <Button onClick={() => setOpen(true)} className="w-full sm:w-auto">
+          Book Room
+        </Button>
       </DialogTrigger>
 
       <DialogContent className="md:max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -183,6 +223,11 @@ export default function BookRoomDialog({
           </div>
 
           <DialogFooter className="flex flex-col sm:flex-row items-center justify-between border-t pt-4 gap-4 mt-4">
+            {error && (
+              <div className="border border-destructive/50 bg-destructive/10 text-destructive rounded-md p-3 text-sm">
+                {error}
+              </div>
+            )}
             <div className="text-sm text-muted-foreground w-full">
               {startDate && endDate ? (
                 <p>
@@ -207,9 +252,11 @@ export default function BookRoomDialog({
               </DialogClose>
               <Button
                 onClick={handleConfirm}
+                disabled={isSubmitting}
                 className="w-full sm:w-auto gap-2"
               >
-                Confirm Booking <ArrowRight className="h-4 w-4" />
+                {isSubmitting ? "Booking..." : "Confirm Booking"}
+                {!isSubmitting && <ArrowRight className="h-4 w-4" />}
               </Button>
             </div>
           </DialogFooter>

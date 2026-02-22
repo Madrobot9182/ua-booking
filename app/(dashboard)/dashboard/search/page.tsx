@@ -1,4 +1,11 @@
-import { Building2, Hash, AlignLeft, Users, Clock } from "lucide-react";
+import {
+  Building2,
+  Hash,
+  AlignLeft,
+  Users,
+  Clock,
+  ArrowLeft,
+} from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth/server";
 import { Card, CardTitle } from "@/components/ui/card";
@@ -8,6 +15,8 @@ import { Badge } from "@/components/ui/badge";
 import BookRoomDialog from "./BookRoomDialog";
 import BookingSearchBar from "@/components/dashboard/booking-search-bar";
 import { getRooms } from "@/lib/room-server-action";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default async function RoomList({
   searchParams,
@@ -75,6 +84,17 @@ export default async function RoomList({
 
   return (
     <div className="container mx-auto p-6 max-w-7xl">
+      {/* Back Button */}
+      <div className="mb-6">
+        <Link href="/dashboard" passHref>
+          <Button asChild variant="outline" className="items-center gap-2">
+            <span>
+              <ArrowLeft />
+              Back
+            </span>
+          </Button>
+        </Link>
+      </div>
       <div className="mb-4">
         <BookingSearchBar initialRooms={initialRooms} />
       </div>
