@@ -61,7 +61,7 @@ export default async function RoomList({
     },
   });
 
-  const busyRoomIds = conflictingBookings.map((booking) => booking.roomId); //get only the IDs
+  const busyRoomIds = conflictingBookings.map((booking) => booking.roomId);
   const data = await prisma.room.findMany({
     where: {
       ...(capacity_num !== undefined && { capacity: { gte: capacity_num } }),
@@ -81,7 +81,6 @@ export default async function RoomList({
         }),
     },
 
-    // 🔥 ADD THIS
     include: {
       resources: {
         include: {
