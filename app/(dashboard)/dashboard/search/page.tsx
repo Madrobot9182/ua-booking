@@ -1,5 +1,5 @@
 import React from "react";
-import { Building2, Hash, Users, AlignLeft } from "lucide-react";
+import { Building2, Hash, AlignLeft, Users, Clock, Building } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth/server";
 // shadcn components
@@ -9,13 +9,43 @@ import { Badge } from "@/components/ui/badge";
 // We import the client-side pop-up button here
 import BookRoomDialog from "./BookRoomDialog"; 
 import BookingSearchBar from "@/components/dashboard/booking-search-bar";
+import build from "next/dist/build";
+export default async function RoomList({
+  searchParams,
+}: {
+  searchParams:{ 
+    building?: string,
+    capacity?: string,
+    start?:string,
+    end?: string 
 
-export default async function RoomList() {
+  }; // Define the expected "q" parameter
+}) {
+  function convertTime(time: Date) {
+    const dateObj = new Date(time);
+  // Format it to local time zone
+    return dateObj.toLocaleTimeString();
+  }
+  const {building ,capacity, start, end} = searchParams;
   const session = await auth.getSession();
   const userId = session.data!.user.id;
-  
+  var capacity_num;
+  if(capacity){
+     capacity_num = parseInt(capacity.slice(0,-1))
+  } 
+  console.log(capacity)
+  console.log(building)
   // Safe to use Prisma here on the server
-  const data = await prisma.room.findMany();
+  const data = await prisma.room.findMany({
+    where:{
+      capacity:{
+        gte : capacity_num,
+      },
+      building: building,
+    }
+});
+  // console.log(data)
+  // console.log(convertTime(data[0].openTime))
   
   return (
     <div className="container mx-auto p-6 max-w-4xl">
@@ -48,8 +78,8 @@ export default async function RoomList() {
                   <Hash className="h-5 w-5 text-muted-foreground" />
                   {room.number}
                 </CardTitle>
-                <Badge variant="secondary" className="font-mono text-xs">
-                  ID: {room.id}
+                <Badge variant="secondary" className="font-mono text-s">
+                  Floor: {room.floor} <br></br>  ID: {room.id}
                 </Badge>
               </div>
               
@@ -58,16 +88,27 @@ export default async function RoomList() {
                 {room.description}
               </p>
 
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <Users className="h-4 w-4 text-primary" />
-                Capacity: {room.capacity} people
+              {/* Added: Flex container to group Capacity and Hours side-by-side */}
+              <div className="flex flex-wrap items-center gap-6 text-sm font-medium">
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4 text-primary" />
+                  Capacity: {room.capacity} people
+                </div>
+                
+                {/* Added: Opening Hours Section */}
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-primary" />
+                  {/* Assumes your room object has an openingHours property. 
+                      Fallback provided just in case. */}
+                  Hours: {String(convertTime(room.openTime)) + "-"  + String(convertTime(room.closeTime))}
+                </div>
               </div>
             </div>
             
             {/* Right Section: The Modal Button */}
             <div className="p-6 pt-0 sm:pt-6 border-t sm:border-t-0 sm:border-l flex items-center justify-center w-full sm:w-40 bg-muted/10 sm:h-full">
               {/* This replaces the button and handles all the client-side pop-up logic */}
-              <BookRoomDialog room={room} userId = {userId}/>
+              <BookRoomDialog room={room} userId={userId}/>
             </div>
             
           </Card>

@@ -14,7 +14,8 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Search, Sparkles, Loader2 } from "lucide-react"
-
+import { redirect } from "next/navigation";
+import { handleSearchRedirect } from "@/components/dashboard/search-actions";
 export default function BookingSearchBar() {
   const [start, setStart] = React.useState<Date | undefined>()
   const [end, setEnd] = React.useState<Date | undefined>()
@@ -23,7 +24,23 @@ export default function BookingSearchBar() {
   const [aiQuery, setAiQuery] = React.useState("")
   const [aiExpanded, setAiExpanded] = React.useState(false)
   const [aiLoading, setAiLoading] = React.useState(false)
+  const executeSearch = () => {
+    const searchData: Record<string, string> = {};
 
+  //Only add values if they exist
+    if (building) searchData.building = building;
+    if (capacity) searchData.capacity = capacity;
+    
+    // Convert Dates to ISO strings (or your preferred format)
+    if (start) searchData.start = start.toISOString();
+    if (end) searchData.end = end.toISOString();
+
+    // 4. Generate the safe query string
+    const params = new URLSearchParams(searchData);
+    const queryString = `?${params.toString()}`;
+      
+    handleSearchRedirect(queryString)
+    }
   // Auto-set end = +1 hour
   React.useEffect(() => {
     if (start) {
@@ -125,9 +142,9 @@ export default function BookingSearchBar() {
               <SelectValue placeholder="Building" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="main">Main</SelectItem>
-              <SelectItem value="science">Science</SelectItem>
-              <SelectItem value="library">Library</SelectItem>
+              <SelectItem value="ECHA">ECHA</SelectItem>
+              <SelectItem value="CCIS">CCIS</SelectItem>
+              <SelectItem value="krha">KRHA</SelectItem>
             </SelectContent>
           </Select>
 
@@ -156,7 +173,7 @@ export default function BookingSearchBar() {
             minDate={start}
           />
 
-          <Button>
+          <Button onClick={executeSearch}>
             <Search className="mr-2 h-4 w-4" />
             Search
           </Button>
